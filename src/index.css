@@ -1,0 +1,253 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  
+  --color-primary-400: #FFC000; /* Vibrant Yellow/Gold */
+  --color-primary-500: #E6AC00;
+  --color-primary-600: #CC9900;
+  
+  --color-dark-950: #0a0a0a;
+  --color-dark-900: #171717;
+  --color-dark-800: #262626;
+  
+  --color-light-50: #ffffff;
+  --color-light-100: #faf9f6; /* Off-white/cream bg */
+  --color-light-200: #f4f3ed;
+  --color-light-300: #e8e6df;
+}
+
+html, body { 
+  margin: 0; 
+  padding: 0;
+  background-color: var(--color-light-100); 
+  color: var(--color-dark-900); 
+  font-family: var(--font-sans);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-light-300); border-radius: 3px; }
+
+/* Typography */
+.heading-serif { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.02em; }
+.text-overline { font-size: 0.688rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--color-primary-500); }
+
+/* Containers */
+.container-custom { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Cards & Sections */
+.section-padding { padding: 5rem 0; }
+
+.clean-card {
+  background: var(--color-light-200);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+.clean-card:hover {
+  transform: translateY(-2px);
+  background: var(--color-light-50);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.05);
+}
+
+.calendar-card {
+  background: var(--color-light-50);
+  border: 1px solid var(--color-light-300);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+}
+.calendar-card:hover {
+  border-color: var(--color-primary-400);
+  box-shadow: 0 4px 12px rgba(255, 192, 0, 0.15);
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--color-primary-400);
+  color: var(--color-dark-950);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.btn-primary:hover {
+  background: var(--color-primary-500);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 192, 0, 0.3);
+}
+
+.btn-secondary {
+  background: var(--color-light-50);
+  color: var(--color-dark-900);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-light-300);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+.btn-secondary:hover {
+  border-color: var(--color-dark-900);
+  background: var(--color-light-200);
+}
+
+/* Animated Menu Buttons */
+.btn-nav {
+  --color: #ffd60f;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.6em;
+  padding: 0 1em;
+  line-height: 2.5em;
+  overflow: hidden;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 700;
+  z-index: 1;
+  color: var(--color-dark-900);
+  border: 2px solid var(--color);
+  border-radius: 6px;
+  position: relative;
+  transition: color 0.3s;
+  background: transparent;
+  white-space: nowrap;
+}
+.btn-nav::before {
+  position: absolute;
+  content: "";
+  background: var(--color);
+  width: 150px;
+  height: 200px;
+  z-index: -1;
+  border-radius: 50%;
+  top: 100%;
+  left: 100%;
+  transition: 0.3s all cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-nav:hover {
+  color: var(--color-dark-950);
+}
+.btn-nav:hover::before {
+  top: -30px;
+  left: -30px;
+}
+
+/* Forms */
+.input-clean {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: var(--color-light-50);
+  border: 1px solid var(--color-light-300);
+  color: var(--color-dark-900);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-clean:focus {
+  border-color: var(--color-primary-400);
+  box-shadow: 0 0 0 3px rgba(255,192,0,0.1);
+}
+
+/* Floating AI Button */
+.fab-ai {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;
+  background: var(--color-dark-950);
+  color: var(--color-primary-400);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  cursor: pointer;
+  z-index: 50;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.fab-ai:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.2);
+}
+.fab-ai-blob {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary-400);
+  opacity: 0;
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ping {
+  75%, 100% { transform: scale(1.3); opacity: 0; }
+  0% { transform: scale(1); opacity: 0.5; }
+}
+
+/* AI Chat Overlay */
+.chat-overlay {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 2rem;
+  width: 380px;
+  height: 600px;
+  max-height: calc(100vh - 120px);
+  background: var(--color-light-50);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12), 0 0 0 1px var(--color-light-300);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform-origin: bottom right;
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .fab-ai { bottom: 1rem; right: 1rem; width: 56px; height: 56px; }
+  .chat-overlay { bottom: 0; right: 0; width: 100%; height: 100%; max-height: 100vh; border-radius: 0; }
+}
+
+/* Slide Panels (for Booking, Mock flow) */
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 60;
+}
+.panel-drawer {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 100%; max-width: 440px;
+  background: var(--color-light-50);
+  z-index: 70;
+  box-shadow: -10px 0 40px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  animation: slide-left 0.3s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes slide-left { from { transform: translateX(100%); } to { transform: translateX(0); } }
