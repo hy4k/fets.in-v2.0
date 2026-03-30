@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, BookOpen, MapPin, Sparkles, Phone, ArrowRight, CheckCircle2, Bell, X } from 'lucide-react';
+import { Calendar as CalendarIcon, ClipboardList, BookOpen, MapPin, Sparkles, Phone, ArrowRight, CheckCircle2, Bell, X, Settings } from 'lucide-react';
 import AgentChatOverlay from './components/AgentChatOverlay';
+import CMAMockBooking from './components/CMAMockBooking';
+import AdminSlotsUpload from './components/AdminSlotsUpload';
 import { examDates } from './data/siteData';
 
 export default function App() {
@@ -8,6 +10,24 @@ export default function App() {
   const [activeLocationModal, setActiveLocationModal] = useState(null);
   // Panel management for Chat overlay interactions
   const [activePanel, setActivePanel] = useState(null);
+  // CMA Mock Booking
+  const [isCMABookingOpen, setIsCMABookingOpen] = useState(false);
+  const [showAdminUpload, setShowAdminUpload] = useState(false);
+  const [toast, setToast] = useState(null);
+  // Admin access: click footer 5× times quickly
+  const [adminClicks, setAdminClicks] = useState(0);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleAdminClick = () => {
+    const next = adminClicks + 1;
+    setAdminClicks(next);
+    if (next >= 5) { setShowAdminUpload(true); setAdminClicks(0); }
+    setTimeout(() => setAdminClicks(0), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-light-100 font-sans text-dark-900">
@@ -89,9 +109,9 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
-                { name: 'CMA US Mock Test', dur: '4 hours', feat: '100 MCQs + 2 Essays', price: '₹2,500', list: ['Real exam simulation', 'Detailed performance analysis', 'Expert feedback session', 'Study plan recommendations'] },
-                { name: 'CELPIP Mock Test', dur: '3 hours', feat: 'Listening, Reading, Writing, Speaking', price: '₹2,000', list: ['Full test simulation', 'Speaking practice with feedback', 'Writing evaluation', 'Score estimate'] },
-                { name: 'IELTS Mock Test', dur: '2h 45min', feat: 'All 4 modules', price: '₹1,800', list: ['Academic/General options', 'Band score estimate', 'Detailed feedback', 'Improvement tips'] },
+                { name: 'CMA US Mock Test', dur: '4 hours', feat: '100 MCQs + 2 Essays', price: '₹2,500', isCMA: true, list: ['Real exam simulation', 'Detailed performance analysis', 'Expert feedback session', 'Study plan recommendations'] },
+                { name: 'CELPIP Mock Test', dur: '3 hours', feat: 'Listening, Reading, Writing, Speaking', price: '₹2,000', isCMA: false, list: ['Full test simulation', 'Speaking practice with feedback', 'Writing evaluation', 'Score estimate'] },
+                { name: 'IELTS Mock Test', dur: '2h 45min', feat: 'All 4 modules', price: '₹1,800', isCMA: false, list: ['Academic/General options', 'Band score estimate', 'Detailed feedback', 'Improvement tips'] },
               ].map((mock, i) => (
                 <div key={i} className="clean-card bg-[#f8f8f4] flex flex-col h-full border border-light-300 shadow-sm relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-primary-400 opacity-5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
@@ -111,7 +131,12 @@ export default function App() {
                       </li>
                     ))}
                   </ul>
-                  <button className="w-full btn-primary shadow-sm hover:shadow-md mt-auto">Book Mock Test <ArrowRight size={16}/></button>
+                  <button
+                    onClick={() => mock.isCMA ? setIsCMABookingOpen(true) : null}
+                    className="w-full btn-primary shadow-sm hover:shadow-md mt-auto"
+                  >
+                    Book Mock Test <ArrowRight size={16}/>
+                  </button>
                 </div>
               ))}
             </div>
@@ -259,6 +284,29 @@ export default function App() {
 
       </main>
 
+      {/* CMA MOCK BOOKING MODAL */}
+      <CMAMockBooking
+        isOpen={isCMABookingOpen}
+        onClose={() => setIsCMABookingOpen(false)}
+        showToast={showToast}
+      />
+
+      {/* ADMIN SLOTS UPLOAD */}
+      {showAdminUpload && (
+        <AdminSlotsUpload onClose={() => setShowAdminUpload(false)} />
+      )}
+
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold transition-all animate-fade-in-up border ${
+          toast.type === 'error'
+            ? 'bg-red-50 text-red-700 border-red-200'
+            : 'bg-green-50 text-green-700 border-green-200'
+        }`}>
+          <CheckCircle2 size={16} /> {toast.message}
+        </div>
+      )}
+
       {/* FLOATING ACTION BUTTON */}
       {!isChatOpen && (
         <button 
@@ -278,6 +326,14 @@ export default function App() {
           onOpenPanel={(panel) => setActivePanel(panel)} 
         />
       )}
+
+      {/* HIDDEN ADMIN TRIGGER — click 5× within 2 seconds */}
+      <button
+        onClick={handleAdminClick}
+        className="fixed bottom-4 left-4 w-6 h-6 opacity-0 z-30"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
       {/* LOCATION MODALS */}
       {activeLocationModal === 'calicut' && (
