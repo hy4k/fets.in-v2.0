@@ -18,50 +18,78 @@ function fmtDate(str) {
   });
 }
 
+const MONTH_MAP = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+
+function normDate(str) {
+  if (!str) return null;
+  str = String(str).trim();
+  // DD-Mon-YYYY  e.g. "01-Apr-2026"
+  if (/^\d{2}-[A-Za-z]{3}-\d{4}$/.test(str)) {
+    const [d, m, y] = str.split('-');
+    return `${y}-${MONTH_MAP[m] || '01'}-${d}`;
+  }
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  // DD/MM/YYYY
+  if (str.includes('/')) {
+    const p = str.split('/');
+    return p[0].length === 4
+      ? `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`
+      : `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  }
+  return null;
+}
+
 function parseExcelFile(file, onDone, onError) {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
       const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(ws, { raw: false, dateNF: 'yyyy-mm-dd' });
+      // Read as raw 2D array to detect FETS tracking form format
+      const raw2d = XLSX.utils.sheet_to_json(ws, { raw: false, defval: '', header: 1 });
 
-      const rows = raw.map((r) => {
-        const date     = r['Date']       || r['date'];
-        const center   = r['Center']     || r['center'];
-        const timeSlot = r['Time Slot']  || r['time_slot'] || r['Time'] || r['time'];
-        const part     = r['Part']       || r['part'];
-        const seats    = parseInt(r['Total Seats'] || r['total_seats'] || r['Seats'] || r['seats'] || '10', 10);
+      // ── Detect FETS tracking form (has "SEAT AVAILABILITY TRACKING FORM" in row 0) ──
+      const isFETSFormat = String(raw2d[0]?.[0] || '').includes('SEAT AVAILABILITY');
 
-        if (!date || !center || !timeSlot || !part) return null;
+      if (isFETSFormat) {
+        // Determine center and total seats from header rows
+        const locationCell = String(raw2d[4]?.[2] || '').toLowerCase();
+        const isCalicut = locationCell.includes('calicut') || locationCell.includes('kozhikode');
+        const centerName = isCalicut ? 'Calicut' : 'Cochin';
+        // Calicut seats: row 4 col 7; Cochin seats: row 5 col 7
+        const totalSeats = parseInt(isCalicut ? raw2d[4]?.[7] : raw2d[5]?.[7], 10) || 40;
 
-        const normCenter = center.trim().toLowerCase().includes('cochin') ||
-                           center.trim().toLowerCase().includes('kochi')
-          ? 'Cochin' : 'Calicut';
-        const normPart = part.trim().toLowerCase().includes('1') ? 'Part 1' : 'Part 2';
-
-        let normDate = date.trim();
-        if (normDate.includes('/')) {
-          const p = normDate.split('/');
-          normDate = p[0].length === 4
-            ? `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`
-            : `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+        const slots = [];
+        for (let i = 11; i <= 163; i++) {
+          const row = raw2d[i];
+          if (!row || !row[1]) continue;
+          const date = normDate(row[1]);
+          if (!date) continue;
+          const mornBooked = Math.max(0, parseInt(row[3], 10) || 0);
+          const noonBooked = Math.max(0, parseInt(row[5], 10) || 0);
+          slots.push({ date, center: centerName, time_slot: '9:00 AM', total_seats: totalSeats, booked_seats: mornBooked });
+          slots.push({ date, center: centerName, time_slot: '2:00 PM', total_seats: totalSeats, booked_seats: noonBooked });
         }
-
-        return {
-          date: normDate,
-          center: normCenter,
-          time_slot: timeSlot.trim(),
-          part: normPart,
-          total_seats: isNaN(seats) ? 10 : seats,
-          booked_seats: 0,
-        };
-      }).filter(Boolean);
-
-      if (!rows.length) {
-        onError('No valid rows found. Ensure columns: Date, Center, Time Slot, Part, Total Seats');
+        if (!slots.length) { onError('No data rows found in the FETS tracking form.'); return; }
+        onDone(slots);
         return;
       }
+
+      // ── Generic format with column headers ──
+      const raw = XLSX.utils.sheet_to_json(ws, { raw: false, dateNF: 'yyyy-mm-dd' });
+      const rows = raw.map((r) => {
+        const date     = r['Date']      || r['date'];
+        const center   = r['Center']    || r['center'];
+        const timeSlot = r['Time Slot'] || r['time_slot'] || r['Time'] || r['time'];
+        const seats    = parseInt(r['Total Seats'] || r['total_seats'] || r['Seats'] || r['seats'] || '40', 10);
+        const booked   = parseInt(r['Booked'] || r['booked_seats'] || r['Booked Seats'] || '0', 10);
+        if (!date || !center || !timeSlot) return null;
+        const normCenter = center.toLowerCase().includes('cochin') || center.toLowerCase().includes('kochi') ? 'Cochin' : 'Calicut';
+        return { date: normDate(date) || date, center: normCenter, time_slot: timeSlot.trim(), total_seats: isNaN(seats) ? 40 : seats, booked_seats: isNaN(booked) ? 0 : booked };
+      }).filter(Boolean);
+
+      if (!rows.length) { onError('No valid rows found. Check columns: Date, Center, Time Slot, Total Seats'); return; }
       onDone(rows);
     } catch (err) {
       onError('Failed to parse file: ' + err.message);
@@ -115,7 +143,7 @@ function UploadTab() {
       }
       const { error } = await supabase
         .from('mock_exam_slots')
-        .upsert(parsedRows, { onConflict: 'date,center,time_slot,part' });
+        .upsert(parsedRows, { onConflict: 'date,center,time_slot' });
       if (error) throw error;
       setResult({ success: true, count: parsedRows.length });
     } catch (err) {
@@ -129,31 +157,17 @@ function UploadTab() {
     <div className="space-y-5">
       {/* Format guide */}
       <div className="bg-primary-400/5 border border-primary-400/20 rounded-xl p-4">
-        <p className="text-sm font-semibold text-dark-950 mb-2">Required Excel Columns:</p>
-        <div className="overflow-x-auto">
-          <table className="text-xs w-full">
-            <thead>
-              <tr className="text-left text-dark-800">
-                {['Date','Center','Time Slot','Part','Total Seats'].map(h=>(
-                  <th key={h} className="pr-4 pb-1 font-bold">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="text-dark-950 font-mono">
-                <td className="pr-4">2026-04-10</td>
-                <td className="pr-4">Cochin</td>
-                <td className="pr-4">9:00 AM</td>
-                <td className="pr-4">Part 1</td>
-                <td>8</td>
-              </tr>
-            </tbody>
-          </table>
+        <p className="text-sm font-semibold text-dark-950 mb-2">Accepted formats:</p>
+        <div className="space-y-2 text-xs">
+          <div className="bg-white border border-light-200 rounded-lg p-2">
+            <p className="font-bold text-dark-950 mb-1">✓ FETS Tracking Form (your existing files)</p>
+            <p className="text-dark-800">The "Seat Availability Tracking Form" Excel — just upload as-is. Morning = 9:00 AM, Noon = 2:00 PM.</p>
+          </div>
+          <div className="bg-white border border-light-200 rounded-lg p-2">
+            <p className="font-bold text-dark-950 mb-1">✓ Simple format</p>
+            <p className="font-mono text-dark-800">Date | Center | Time Slot | Total Seats | Booked</p>
+          </div>
         </div>
-        <p className="text-xs text-dark-800 mt-2">
-          Center: "Cochin" or "Calicut" &nbsp;|&nbsp; Part: "Part 1" or "Part 2" &nbsp;|&nbsp;
-          Date: YYYY-MM-DD or DD/MM/YYYY
-        </p>
       </div>
 
       {/* Drop zone */}
@@ -191,7 +205,7 @@ function UploadTab() {
           <div className="overflow-x-auto rounded-xl border border-light-200">
             <table className="w-full text-xs">
               <thead className="bg-light-100">
-                <tr>{['Date','Center','Time','Part','Seats'].map(h=>(
+                <tr>{['Date','Center','Session','Total','Booked','Available'].map(h=>(
                   <th key={h} className="px-3 py-2 text-left font-semibold text-dark-950">{h}</th>
                 ))}</tr>
               </thead>
@@ -201,8 +215,9 @@ function UploadTab() {
                     <td className="px-3 py-2 text-dark-800">{r.date}</td>
                     <td className="px-3 py-2 text-dark-800">{r.center}</td>
                     <td className="px-3 py-2 text-dark-800">{r.time_slot}</td>
-                    <td className="px-3 py-2 text-dark-800">{r.part}</td>
                     <td className="px-3 py-2 text-dark-800">{r.total_seats}</td>
+                    <td className="px-3 py-2 text-dark-800">{r.booked_seats}</td>
+                    <td className="px-3 py-2 font-semibold text-green-700">{r.total_seats - r.booked_seats}</td>
                   </tr>
                 ))}
               </tbody>

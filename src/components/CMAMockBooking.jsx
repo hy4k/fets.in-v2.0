@@ -17,6 +17,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [selectedPart, setSelectedPart] = useState(null); // 'Part 1' | 'Part 2'
   const [form, setForm] = useState({ name: '', email: '', mobile: '', institute: '' });
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(null);
@@ -133,7 +134,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
           email: form.email.trim(),
           mobile: form.mobile.trim(),
           institute: form.institute.trim() || null,
-          part: selectedSlot.part,
+          part: selectedPart,
           coupon_code: couponApplied?.code || null,
           original_price: EXAM_PRICE,
           discount_amount: discount,
@@ -203,6 +204,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
     setSelectedCenter(null);
     setSelectedDate(null);
     setSelectedSlot(null);
+    setSelectedPart(null);
     setAvailableDates([]);
     setAvailableSlots([]);
     setForm({ name: '', email: '', mobile: '', institute: '' });
@@ -218,7 +220,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
   const canProceed = () => {
     if (step === 1) return !!selectedCenter;
     if (step === 2) return !!selectedDate;
-    if (step === 3) return !!selectedSlot;
+    if (step === 3) return !!(selectedSlot && selectedPart);
     if (step === 4) return !!(form.name && form.email && form.mobile);
     return true;
   };
@@ -311,7 +313,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
                 Your CMA US Mock Exam has been booked. A confirmation will be sent to <strong>{form.email}</strong>.
               </p>
               <div className="bg-light-100 border border-light-200 rounded-2xl p-5 text-left space-y-2 text-sm mb-6">
-                <div className="flex justify-between"><span className="text-dark-800">Part</span><span className="font-semibold text-dark-950">{selectedSlot?.part}</span></div>
+                <div className="flex justify-between"><span className="text-dark-800">Part</span><span className="font-semibold text-dark-950">{selectedPart}</span></div>
                 <div className="flex justify-between"><span className="text-dark-800">Center</span><span className="font-semibold text-dark-950">{selectedCenter}</span></div>
                 <div className="flex justify-between"><span className="text-dark-800">Date</span><span className="font-semibold text-dark-950">{formatDate(selectedDate)}</span></div>
                 <div className="flex justify-between"><span className="text-dark-800">Time</span><span className="font-semibold text-dark-950">{selectedSlot?.time_slot}</span></div>
@@ -416,10 +418,10 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
             </div>
           )}
 
-          {/* STEP 3 — SELECT SLOT */}
+          {/* STEP 3 — SELECT SLOT + PART */}
           {!bookingDone && step === 3 && (
             <div>
-              <h3 className="font-semibold text-dark-950 mb-1">Select Time Slot</h3>
+              <h3 className="font-semibold text-dark-950 mb-1">Select Time Slot &amp; Exam Part</h3>
               <p className="text-sm text-dark-800 mb-5">
                 {selectedCenter} — {formatDate(selectedDate)}
               </p>
@@ -433,40 +435,76 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
                   No slots available for this date. Please go back and select a different date.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {availableSlots.map(slot => {
-                    const seatsLeft = slot.total_seats - slot.booked_seats;
-                    const isSelected = selectedSlot?.id === slot.id;
-                    return (
-                      <button
-                        key={slot.id}
-                        onClick={() => setSelectedSlot(slot)}
-                        className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                          isSelected
-                            ? 'border-primary-400 bg-primary-400/5 shadow-sm'
-                            : 'border-light-200 hover:border-primary-400/40 bg-light-100'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary-400 text-dark-950' : 'bg-light-200 text-dark-800'}`}>
-                              <Clock size={17} />
-                            </div>
-                            <div>
-                              <div className="font-bold text-dark-950 text-sm">{slot.time_slot}</div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary-400/10 text-primary-600">{slot.part}</span>
-                                <span className="text-xs text-dark-800">
-                                  {seatsLeft} seat{seatsLeft !== 1 ? 's' : ''} available
-                                </span>
+                <div className="space-y-5">
+                  {/* Time slots */}
+                  <div>
+                    <p className="text-xs font-bold text-dark-800 uppercase tracking-wider mb-2">Session</p>
+                    <div className="space-y-3">
+                      {availableSlots.map(slot => {
+                        const seatsLeft = slot.total_seats - slot.booked_seats;
+                        const isSelected = selectedSlot?.id === slot.id;
+                        const label = slot.time_slot === '9:00 AM' ? 'Morning Session' : 'Afternoon Session';
+                        return (
+                          <button
+                            key={slot.id}
+                            onClick={() => setSelectedSlot(slot)}
+                            className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                              isSelected
+                                ? 'border-primary-400 bg-primary-400/5 shadow-sm'
+                                : 'border-light-200 hover:border-primary-400/40 bg-light-100'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isSelected ? 'bg-primary-400 text-dark-950' : 'bg-light-200 text-dark-800'}`}>
+                                  <Clock size={17} />
+                                </div>
+                                <div>
+                                  <div className="font-bold text-dark-950 text-sm">{slot.time_slot} — {label}</div>
+                                  <div className="text-xs text-dark-800 mt-0.5">
+                                    {seatsLeft} seat{seatsLeft !== 1 ? 's' : ''} available
+                                  </div>
+                                </div>
                               </div>
+                              {isSelected && <CheckCircle size={18} className="text-primary-500 shrink-0" />}
                             </div>
-                          </div>
-                          {isSelected && <CheckCircle size={18} className="text-primary-500 shrink-0" />}
-                        </div>
-                      </button>
-                    );
-                  })}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Part selection — shown after a slot is chosen */}
+                  {selectedSlot && (
+                    <div>
+                      <p className="text-xs font-bold text-dark-800 uppercase tracking-wider mb-2">Exam Part</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {['Part 1', 'Part 2'].map(part => (
+                          <button
+                            key={part}
+                            onClick={() => setSelectedPart(part)}
+                            className={`p-4 rounded-xl border-2 text-left transition-all ${
+                              selectedPart === part
+                                ? 'border-primary-400 bg-primary-400/5 shadow-sm'
+                                : 'border-light-200 hover:border-primary-400/40 bg-light-100'
+                            }`}
+                          >
+                            <div className="font-bold text-dark-950 text-sm">{part}</div>
+                            <div className="text-xs text-dark-800 mt-0.5">
+                              {part === 'Part 1'
+                                ? 'Financial Planning, Performance & Analytics'
+                                : 'Strategic Financial Management'}
+                            </div>
+                            {selectedPart === part && (
+                              <div className="mt-2 flex items-center gap-1 text-primary-600 text-xs font-semibold">
+                                <CheckCircle size={12} /> Selected
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -542,7 +580,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
                 <div className="space-y-2 text-sm">
                   {[
                     ['Exam', 'CMA US Mock Exam'],
-                    ['Part', selectedSlot?.part],
+                    ['Part', selectedPart],
                     ['Center', selectedCenter],
                     ['Date', formatDate(selectedDate)],
                     ['Time', selectedSlot?.time_slot],
