@@ -102,25 +102,9 @@ export default function AgentChat({ onOpenPanel, contextBridge, onHighlight }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // Cross-panel: handle context from left panel
-  useEffect(() => {
-    if (!contextBridge) return;
-    const { type, name, id } = contextBridge;
-    let userText, intent;
-    if (type === 'exam') {
-      userText = `Tell me about ${name}`;
-      intent = `exam_info_${id}`;
-    } else if (type === 'location') {
-      userText = `Show me the ${name} centre`;
-      intent = 'contact';
-    } else return;
-    addUserMsg(userText);
-    processIntent(intent);
-  }, [contextBridge]);
-
-  const addUserMsg = (text) => {
+  const addUserMsg = useCallback((text) => {
     setMessages((prev) => [...prev, { id: `u-${Date.now()}`, type: 'user', content: text }]);
-  };
+  }, []);
 
   const processIntent = useCallback((intent) => {
     setIsTyping(true);
@@ -136,6 +120,26 @@ export default function AgentChat({ onOpenPanel, contextBridge, onHighlight }) {
       if (res.openPanel) setTimeout(() => onOpenPanel(res.openPanel), 350);
     }, delay);
   }, [onOpenPanel, onHighlight]);
+
+  // Cross-panel: handle context from left panel (defer to avoid sync setState in effect)
+  useEffect(() => {
+    if (!contextBridge) return;
+    const { type, name, id } = contextBridge;
+    let userText;
+    let intent;
+    if (type === 'exam') {
+      userText = `Tell me about ${name}`;
+      intent = `exam_info_${id}`;
+    } else if (type === 'location') {
+      userText = `Show me the ${name} centre`;
+      intent = 'contact';
+    } else return;
+    const t = setTimeout(() => {
+      addUserMsg(userText);
+      processIntent(intent);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [contextBridge, addUserMsg, processIntent]);
 
   const handleSend = () => {
     const text = input.trim();

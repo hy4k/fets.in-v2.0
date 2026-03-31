@@ -23,7 +23,8 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // framer-motion `motion` / `AnimatePresence` are used as JSX factories; ESLint may not count them as refs
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]|^motion$|^AnimatePresence$' }],
     },
   },
 ])

@@ -104,3 +104,18 @@ VALUES
   ('LAUNCH500', 'fixed',     500,  50,   '2026-12-31'),
   ('EARLYBIRD', 'percentage', 15,  100,  '2026-06-30')
 ON CONFLICT (code) DO NOTHING;
+
+-- 6. Early access / marketing leads (public insert only)
+CREATE TABLE IF NOT EXISTS early_access_leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  interested_exam TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE early_access_leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can register for early access"
+  ON early_access_leads FOR INSERT WITH CHECK (true);
