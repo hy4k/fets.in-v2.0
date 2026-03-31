@@ -19,6 +19,13 @@ export default function EarlyAccessSection({ showToast }) {
       showToast('Please enter your name and email.', 'error');
       return;
     }
+    if (!supabase) {
+      showToast(
+        'Registration is not configured on this server yet. Please email edu@fets.in or call +91 9605686000.',
+        'error',
+      );
+      return;
+    }
     setPending(true);
     try {
       const { error } = await supabase.from('early_access_leads').insert({

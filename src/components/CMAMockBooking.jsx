@@ -47,6 +47,11 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
   }, [selectedDate, selectedCenter, step]);
 
   const fetchAvailableDates = async () => {
+    if (!supabase) {
+      setLoadingDates(false);
+      showToast('Booking service is unavailable. Please call +91 9605686000.', 'error');
+      return;
+    }
     setLoadingDates(true);
     setAvailableDates([]);
     try {
@@ -70,6 +75,11 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
   };
 
   const fetchAvailableSlots = async () => {
+    if (!supabase) {
+      setLoadingSlots(false);
+      showToast('Booking service is unavailable. Please call +91 9605686000.', 'error');
+      return;
+    }
     setLoadingSlots(true);
     setAvailableSlots([]);
     try {
@@ -91,6 +101,10 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
+    if (!supabase) {
+      setCouponError('Coupon validation unavailable. Call +91 9605686000.');
+      return;
+    }
     setCouponLoading(true);
     setCouponError('');
     try {
@@ -122,6 +136,10 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
   const handleSubmit = async () => {
     if (!selectedSlot || !form.name || !form.email || !form.mobile) {
       showToast('Please fill in all required fields.', 'error');
+      return;
+    }
+    if (!supabase) {
+      showToast('Booking service is unavailable. Please call +91 9605686000.', 'error');
       return;
     }
     setSubmitting(true);
@@ -185,6 +203,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
       prefill: { name: form.name, email: form.email, contact: form.mobile },
       theme: { color: '#FFC000' },
       handler: async (response) => {
+        if (!supabase) return;
         await supabase
           .from('mock_exam_bookings')
           .update({

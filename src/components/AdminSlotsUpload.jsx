@@ -5,7 +5,7 @@ import {
   ChevronDown, Filter, Edit3
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'fets@admin2024';
 
@@ -132,6 +132,10 @@ function UploadTab() {
 
   const upload = async () => {
     if (!parsedRows?.length) return;
+    if (!supabase) {
+      setResult({ success: false, message: 'Supabase is not configured (missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).' });
+      return;
+    }
     setUploading(true); setResult(null);
     try {
       if (clearExisting) {
@@ -273,6 +277,11 @@ function ManageTab() {
   const [expandedDates, setExpandedDates] = useState({});
 
   const fetchSlots = useCallback(async () => {
+    if (!supabase) {
+      setSlots([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -314,8 +323,12 @@ function ManageTab() {
   };
 
   const saveSlot = async (slot) => {
+    if (!supabase) {
+      setSaveResult((prev) => ({ ...prev, [slot.id]: 'err' }));
+      return;
+    }
     const e = getEdit(slot);
-    setSaving(prev => ({ ...prev, [slot.id]: true }));
+    setSaving((prev) => ({ ...prev, [slot.id]: true }));
     try {
       const { error } = await supabase
         .from('mock_exam_slots')
@@ -557,6 +570,12 @@ export default function AdminSlotsUpload({ onClose }) {
           ) : (
             /* ── Authenticated ── */
             <div>
+              {!isSupabaseConfigured && (
+                <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  Supabase environment variables are missing. Set <code className="rounded bg-white/80 px-1">VITE_SUPABASE_URL</code> and{' '}
+                  <code className="rounded bg-white/80 px-1">VITE_SUPABASE_ANON_KEY</code> in <code className="rounded bg-white/80 px-1">.env</code>, then rebuild.
+                </div>
+              )}
               {/* Tabs */}
               <div className="flex gap-1 p-1 bg-light-200 rounded-xl mb-6">
                 <TabBtn active={tab === 'manage'} onClick={() => setTab('manage')}>
