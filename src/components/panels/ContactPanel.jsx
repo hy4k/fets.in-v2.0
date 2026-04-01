@@ -78,7 +78,7 @@ export default function ContactPanel({ onClose }) {
               const Icon = modeIcons[d.mode] || Navigation;
               return (
                 <div key={i} className="flex items-start gap-2.5">
-                  <Icon size={14} className="text-peach-400 mt-0.5 flex-shrink-0" />
+                  <Icon size={14} className="mt-0.5 flex-shrink-0 text-orange-400" />
                   <span className="text-zinc-400 text-sm">
                     <span className="text-zinc-300 font-medium">{d.mode}:</span> {d.detail}
                   </span>

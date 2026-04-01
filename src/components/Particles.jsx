@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
+import { useState } from 'react';
 
 export default function Particles() {
-  const particles = useMemo(() => {
-    return Array.from({ length: 30 }, (_, i) => ({
+  const [particles] = useState(() =>
+    Array.from({ length: 30 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       animationDuration: `${Math.random() * 20 + 15}s`,
       animationDelay: `${Math.random() * 15}s`,
       size: `${Math.random() * 3 + 1}px`,
-    }));
-  }, []);
+    })),
+  );
 
   return (
     <div className="particles-bg">
