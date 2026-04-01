@@ -1,347 +1,1361 @@
-import { useState } from 'react';
-import { Calendar as CalendarIcon, ClipboardList, BookOpen, MapPin, Sparkles, Phone, ArrowRight, CheckCircle2, Bell, X } from 'lucide-react';
-import AgentChatOverlay from './components/AgentChatOverlay';
-import { examDates } from './data/siteData';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Calendar as CalendarIcon,
+  ClipboardList,
+  BookOpen,
+  MapPin,
+  Phone,
+  MessageCircle,
+  ArrowRight,
+  CheckCircle2,
+  Bell,
+  X,
+  ChevronDown,
+  Clock,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  Loader2,
+  ShieldCheck,
+  Star,
+} from "lucide-react";
+import AgentChatOverlay from "./components/AgentChatOverlay";
+import Footer from "./components/Footer";
+import HeroBackground from "./components/HeroBackground";
+import CMAMockBookingModal from "./components/CMAMockBookingModal";
+import { supabase } from "./lib/supabase";
+
+/* ==========================================================
+   FAQ DATA — "Questions candidates ask us"
+   Short, punchy yet comprehensive answers
+   ========================================================== */
+const faqItems = [
+  {
+    q: "What exams can I take here?",
+    a: "We host CMA US (IMA), CELPIP, IELTS, TOEFL, GRE, ACCA, AWS, Cisco, CompTIA, MRCS (RCS), Microsoft certifications, and all Prometric & Pearson VUE exams. Two fully-equipped centres — Calicut & Kochi.",
+  },
+  {
+    q: "How do I book my exam slot?",
+    a: "Visit our exam calendar above, pick your preferred date & centre, and click 'Book Slot'. You'll get instant confirmation via email and WhatsApp. For Prometric/Pearson exams, you can also book directly through their portals — we'll still see you on exam day.",
+  },
+  {
+    q: "What should I bring on exam day?",
+    a: "Two valid government-issued photo IDs (passport recommended), your scheduling confirmation email, and nothing else. Lockers are provided free of charge. No phones, bags, watches, or food allowed inside the testing room.",
+  },
+  {
+    q: "Can I reschedule or cancel?",
+    a: "Yes. Most exams allow rescheduling up to 48 hours before the appointment at no extra cost. Cancellation policies vary by exam vendor — CMA US allows 30+ days for a full refund, CELPIP needs 7+ days. Our team can guide you through the process.",
+  },
+  {
+    q: "Do you offer mock tests?",
+    a: "Absolutely. We run full-simulation mock tests for CMA US (Part 1 & Part 2), CELPIP General, and IELTS — inside the actual exam room with identical software. It's the closest thing to the real exam without the pressure. Check our Mock Exams section below.",
+  },
+  {
+    q: "How do I reach the centre?",
+    a: "Calicut Centre: 4th Floor, Kadooli Tower, West Nadakkavu — 3 km from Railway Station. Kochi Centre: 6th Floor, Manjooran Estate, Edappally — just 350m from Edapally Metro Station. Google Maps links are in the location buttons above.",
+  },
+  {
+    q: "Is there parking available?",
+    a: "Yes, both centres have dedicated parking. Calicut has basement parking, and the Kochi centre is adjacent to the Lulu Mall area with ample public parking. Arrive 30 minutes early for a stress-free start.",
+  },
+  {
+    q: "What makes FETS different?",
+    a: "We're one of the very few centres in India authorized for both Prometric AND Pearson VUE. Climate-controlled rooms, biometric security, 24/7 CCTV, noise-cancelling headsets, and a dedicated exam-day support team. With us since 2019, over 10,000+ exams conducted.",
+  },
+];
 
 export default function App() {
+  const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeLocationModal, setActiveLocationModal] = useState(null);
-  // Panel management for Chat overlay interactions
   const [activePanel, setActivePanel] = useState(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState(0);
+
+  // Early Access / Auth state
+  const [authMode, setAuthMode] = useState("register"); // 'register' | 'login'
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    interested_exam: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formSuccess, setFormSuccess] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  // Mock Exam Booking state
+  const [mockBookingModal, setMockBookingModal] = useState(false);
+  const [mockSelected, setMockSelected] = useState(null);
+  const [mockForm, setMockForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    date: "",
+  });
+  const [mockFormLoading, setMockFormLoading] = useState(false);
+  const [mockFormSuccess, setMockFormSuccess] = useState(false);
+
+  const handleBookMock = async (e) => {
+    e.preventDefault();
+    if (!mockForm.name || !mockForm.email || !mockForm.phone) return;
+
+    setMockFormLoading(true);
+    try {
+      const { error } = await supabase.from("mock_exam_bookings").insert({
+        mock_name: mockSelected?.name || "CMA US Mock Test",
+        full_name: mockForm.name,
+        email: mockForm.email,
+        phone: mockForm.phone,
+        preferred_date: mockForm.date || null,
+      });
+      if (error) throw error;
+
+      setMockFormSuccess(true);
+      setTimeout(() => {
+        setMockBookingModal(false);
+        setMockForm({ name: "", email: "", phone: "", date: "" });
+        setMockFormSuccess(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Mock Booking Error:", err);
+      alert("Failed to book mock test. Please try again.");
+    } finally {
+      setMockFormLoading(false);
+    }
+  };
+
+  const handleFormChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError("");
+    try {
+      // 1. Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: { full_name: formData.full_name, phone: formData.phone },
+        },
+      });
+      if (authError) throw authError;
+
+      // 2. Create candidate profile
+      const { error: profileError } = await supabase
+        .from("candidate_profiles")
+        .insert({
+          id: authData.user.id,
+          full_name: formData.full_name,
+          email: formData.email,
+          phone: formData.phone,
+          interested_exam: formData.interested_exam,
+        });
+      if (profileError) throw profileError;
+
+      // 3. Also store in early_access_leads for admin tracking
+      await supabase.from("early_access_leads").insert({
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        interested_exam: formData.interested_exam,
+        user_id: authData.user.id,
+      });
+
+      setFormSuccess(true);
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } catch (err) {
+      setFormError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError("");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (error) throw error;
+      navigate("/dashboard");
+    } catch (err) {
+      setFormError(err.message || "Login failed. Check your credentials.");
+    } finally {
+      setFormLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-light-100 font-sans text-dark-900">
-      
-      {/* HEADER */}
-      <header className="fixed top-0 left-0 right-0 h-20 bg-light-50/90 backdrop-blur-md border-b border-light-300 z-40 flex items-center shadow-sm">
-        <div className="container-custom flex justify-center items-center w-full">
-          <div className="hidden md:flex items-center justify-center flex-wrap gap-3 font-semibold text-sm w-full">
-            <button onClick={() => setActiveLocationModal('calicut')} className="btn-nav gap-1"><MapPin size={14}/> Calicut Centre</button>
-            <button onClick={() => setActiveLocationModal('kochi')} className="btn-nav gap-1"><MapPin size={14}/> Kochi Centre</button>
-            <a href="#mock-exams" className="btn-nav">Mock Exams</a>
-            <a href="#calendar" className="btn-nav">Check Availability</a>
-            <a href="#early-access" className="btn-nav">Early Access</a>
-            <a href="#calendar" className="btn-nav">Book Exam</a>
-            <a href="tel:+919605686000" className="btn-nav gap-1 md:ml-auto">
-              <Phone size={14} /> +91 9605686000
-            </a>
+      {/* HEADER — Clean Nav with Bigger Buttons */}
+      <header
+        className="fixed top-0 left-0 right-0 bg-light-50/90 backdrop-blur-md border-b border-light-300 z-40 flex items-center shadow-sm"
+        style={{ height: "4.5rem" }}
+      >
+        <div className="w-full max-w-[1440px] mx-auto px-4 flex justify-center items-center">
+          <div className="hidden lg:flex items-center justify-center gap-2 font-semibold w-full">
+            {/* Left side */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveLocationModal("calicut")}
+                className="btn-nav gap-1.5"
+              >
+                <MapPin size={16} /> Calicut Centre
+              </button>
+              <button
+                onClick={() => setActiveLocationModal("kochi")}
+                className="btn-nav gap-1.5"
+              >
+                <MapPin size={16} /> Kochi Centre
+              </button>
+            </div>
+
+            {/* Middle group */}
+            <div className="flex gap-2 ml-auto">
+              <a href="#early-access" className="btn-nav">
+                Check Availability
+              </a>
+              <a href="#early-access" className="btn-nav">
+                Early Access
+              </a>
+              <div className="w-4"></div> {/* A little bit of space */}
+              <a href="#mock-exams" className="btn-nav">
+                Mock Exams
+              </a>
+            </div>
+
+            {/* Right side (AI + Contact) */}
+            <div className="flex gap-2 items-center ml-auto">
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="btn-nav gap-2 bg-dark-950 text-[#FFD000] border-transparent shadow hover:bg-dark-900 transition-all font-bold group px-4"
+              >
+                <NeuralOrbInline /> Exam Assist
+              </button>
+
+              <div className="flex items-center gap-1.5 ml-1">
+                <a
+                  href="tel:+919605686000"
+                  title="Call Us"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-light-200 hover:bg-light-300 text-dark-800 transition-colors border border-light-300"
+                >
+                  <Phone size={18} />
+                </a>
+                <a
+                  href="mailto:contact@fets.in"
+                  title="Message Us"
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-light-200 hover:bg-light-300 text-dark-800 transition-colors border border-light-300"
+                >
+                  <MessageCircle size={18} />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="pt-20">
-        
-        {/* HERO SECTION */}
-        <section className="py-20 md:py-28 relative overflow-hidden bg-light-100">
-          
-          {/* Animated Vibrant Background Orbs (Uses user's palette) */}
-          <div className="absolute top-10 left-1/4 w-72 md:w-[500px] h-72 md:h-[500px] bg-[#FFD150]/20 rounded-full blur-[80px] mix-blend-multiply animate-blob pointer-events-none" />
-          <div className="absolute top-1/4 right-1/4 w-72 md:w-[400px] h-72 md:h-[400px] bg-[#458B73]/15 rounded-full blur-[80px] mix-blend-multiply animate-blob animation-delay-2000 pointer-events-none" />
-          <div className="absolute -bottom-8 left-1/3 w-80 md:w-[600px] h-80 md:h-[600px] bg-[#F26076]/10 rounded-full blur-[80px] mix-blend-multiply animate-blob animation-delay-4000 pointer-events-none" />
-          
-          <div className="container-custom text-center relative z-10 max-w-5xl mx-auto flex flex-col items-center">
-            
-            {/* Elegant Context Badge */}
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/70 backdrop-blur-md border border-light-300 text-dark-800 text-[11px] font-bold tracking-[0.2em] uppercase mb-12 shadow-sm animate-fade-in-up">
-              <Sparkles size={14} className="text-primary-500" />
-              AI-Powered Examination Hub
-            </div>
+      <main style={{ paddingTop: "4.5rem" }}>
+        {/* ============================================
+            SECTION 1: HERO — Supabase-inspired Clean Dark
+            ============================================ */}
+        <section className="hero-dark-section relative overflow-hidden">
+          {/* Plain Dark Background Reference as Requested */}
 
-            {/* Main Logo Container */}
-            <div className="relative mb-16 animate-fade-in-up animation-delay-200 flex justify-center w-full">
-               <img src="/images/logos/forun-logo.png" alt="Forun Testing & Educational Services" className="h-28 sm:h-36 md:h-44 object-contain mix-blend-multiply" />
-            </div>
+          {/* Content */}
+          <div className="hero-dark-content">
+            <h1 className="hero-dark-heading animate-fade-in-up">
+              Forun Testing
+              <br />
+              <span className="hero-dark-accent">
+                &amp; Educational Services
+              </span>
+            </h1>
 
-            {/* Elevated CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-24 w-full sm:w-auto animate-fade-in-up animation-delay-400">
-              <a href="#calendar" className="btn-nav h-14 px-10 text-[15px] bg-white hover:bg-transparent shadow-sm">
-                Check Exam Dates <ArrowRight size={18} className="ml-2" />
+            <p className="hero-dark-sub animate-fade-in-up animation-delay-200">
+              Kerala's Premier Prometric & Pearson VUE Authorized Testing
+              Center.
+              <br className="hidden sm:block" />
+              CMA US, CELPIP, IELTS, TOEFL, GRE, ACCA — Calicut & Kochi.
+            </p>
+
+            <div className="hero-dark-ctas animate-fade-in-up animation-delay-300">
+              <a href="#early-access" className="hero-dark-btn-primary">
+                Book Your Exam <ArrowRight size={18} />
               </a>
-              <button onClick={() => setIsChatOpen(true)} className="btn-nav h-14 px-10 text-[15px] bg-white hover:bg-transparent shadow-sm">
-                Ask EXAM ASSIST <Sparkles size={18} className="text-primary-500 ml-2" />
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="hero-dark-btn-secondary"
+              >
+                Ask Exam Assist
+                <NeuralOrbInline />
               </button>
             </div>
-
-            {/* Glassmorphic Client Logos Shelf */}
-            <div className="flex flex-col items-center w-full max-w-4xl animate-fade-in-up animation-delay-600">
-              <h4 className="text-[10px] font-bold text-dark-500 uppercase tracking-widest mb-6 border-b border-light-300/50 pb-2 px-8">CERTIFIED TESTING PARTNERS</h4>
-              <div className="flex justify-center flex-wrap items-center gap-8 md:gap-14 lg:gap-16 bg-white/60 backdrop-blur-lg border border-light-200/60 rounded-[2rem] px-8 py-8 md:py-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] w-full transition-transform hover:-translate-y-1">
-                <img src="/images/logos/prometric.png" alt="Prometric" className="h-10 md:h-12 object-contain hover:scale-105 transition-transform duration-300" />
-                <img src="/images/logos/pearson-vue.png" alt="Pearson VUE" className="h-10 md:h-12 object-contain hover:scale-105 transition-transform duration-300" />
-                <img src="/images/logos/celpip.jpg" alt="CELPIP" className="h-10 md:h-12 mix-blend-multiply object-contain hover:scale-105 transition-transform duration-300" />
-                <img src="/images/logos/cma-usa.png" alt="CMA" className="h-12 md:h-16 object-contain hover:scale-105 transition-transform duration-300" />
-                <img src="/images/logos/psi.png" alt="PSI" className="h-12 md:h-16 object-contain hover:scale-105 transition-transform duration-300" />
-              </div>
-            </div>
-
           </div>
         </section>
 
-        {/* MOCK EXAMS SECTION */}
-        <section id="mock-exams" className="section-padding bg-light-100">
-          <div className="container-custom">
-            <div className="text-center mb-12">
-              <h4 className="text-overline mb-3">Mock Exams</h4>
-              <h2 className="heading-serif text-4xl md:text-5xl font-semibold text-dark-950">Practice in Real Exam Conditions</h2>
-              <p className="text-dark-800 mt-4 max-w-2xl mx-auto">Familiarize yourself with the testing environment and format through our authentic mock test experience.</p>
+        {/* ==================================================
+            SECTION 2: FAQ — Dialogue Thread
+            Conversational layout — candidate asks, FETS answers
+            ================================================== */}
+        <section className="dialogue-section section-padding relative" id="faq">
+          <div className="container-custom relative z-10">
+            {/* Split Header: YOU ASK ● WE ANSWER */}
+            <div className="dialogue-header">
+              <span className="dialogue-header-block dialogue-header-you">
+                You Ask.
+              </span>
+              <div className="dialogue-header-separator">
+                <span className="sep-line"></span>
+                <span className="sep-dot"></span>
+                <span className="sep-line"></span>
+              </div>
+              <span className="dialogue-header-block dialogue-header-we">
+                We Answer.
+              </span>
+            </div>
+            <p
+              className="text-center text-dark-800/50 text-sm mb-12 -mt-6"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              Direct from the candidate hotline — zero fluff.
+            </p>
+
+            {/* Dialogue Thread */}
+            <div className="dialogue-thread">
+              {faqItems.map((item, i) => (
+                <div key={i} className="dialogue-pair">
+                  {/* Question bubble */}
+                  <div
+                    className="dialogue-question"
+                    onClick={() => setOpenFaqIndex(openFaqIndex === i ? -1 : i)}
+                  >
+                    <div>
+                      <div className="dialogue-question-label">Candidate</div>
+                      {item.q}
+                    </div>
+                    <ChevronDown
+                      size={18}
+                      className={`text-[#FFD000]/40 shrink-0 transition-transform duration-300 ${
+                        openFaqIndex === i ? "rotate-180" : ""
+                      }`}
+                    />
+                  </div>
+
+                  {/* Answer bubble — appears on click */}
+                  <div
+                    className={`overflow-hidden transition-all duration-400 ease-in-out ${
+                      openFaqIndex === i
+                        ? "max-h-72 opacity-100"
+                        : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="dialogue-answer">
+                      <div className="dialogue-answer-label">FETS Team</div>
+                      {item.a}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA below FAQ */}
+            <div className="text-center mt-12">
+              <p
+                className="text-dark-800/50 text-sm mb-3"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                Can't find your question?
+              </p>
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl font-bold text-sm bg-dark-950 text-primary-400 hover:bg-dark-900 transition-all shadow-lg"
+              >
+                <NeuralOrbInline /> Ask EXAM ASSIST
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            SECTION 3: MOCK EXAMS — Liquid Glass Design
+            Frosted transparent cards with refraction borders
+            ===================================================== */}
+        <section
+          id="mock-exams"
+          className="liquid-glass-section section-padding relative"
+        >
+          <div className="container-custom relative z-10">
+            <div className="text-center mb-14">
+              <span className="text-[11px] font-bold text-[#FFD000]/60 uppercase tracking-[0.2em]">
+                Mock Exams
+              </span>
+              <h2
+                className="text-4xl md:text-5xl font-bold text-white mt-3 mb-4"
+                style={{ textShadow: "0 2px 20px rgba(255, 208, 0, 0.15)" }}
+              >
+                Practice in{" "}
+                <span className="heading-serif italic text-[#FFD000]">
+                  Real Exam Conditions
+                </span>
+              </h2>
+              <p className="text-white/40 max-w-2xl mx-auto">
+                Familiarize yourself with the testing environment and format
+                through our authentic mock test experience.
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { name: 'CMA US Mock Test', dur: '4 hours', feat: '100 MCQs + 2 Essays', price: '₹2,500', list: ['Real exam simulation', 'Detailed performance analysis', 'Expert feedback session', 'Study plan recommendations'] },
-                { name: 'CELPIP Mock Test', dur: '3 hours', feat: 'Listening, Reading, Writing, Speaking', price: '₹2,000', list: ['Full test simulation', 'Speaking practice with feedback', 'Writing evaluation', 'Score estimate'] },
-                { name: 'IELTS Mock Test', dur: '2h 45min', feat: 'All 4 modules', price: '₹1,800', list: ['Academic/General options', 'Band score estimate', 'Detailed feedback', 'Improvement tips'] },
-              ].map((mock, i) => (
-                <div key={i} className="clean-card bg-[#f8f8f4] flex flex-col h-full border border-light-300 shadow-sm relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-primary-400 opacity-5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-                  <div className="mb-4 text-primary-500">
-                    <ClipboardList size={28} />
-                  </div>
-                  <h3 className="heading-serif text-2xl font-semibold mb-2 text-dark-950">{mock.name}</h3>
-                  <div className="flex items-center gap-3 text-sm text-dark-800 mb-4 font-medium">
-                    <span className="flex items-center gap-1"><CalendarIcon size={14}/> {mock.dur}</span>
-                    <span className="flex items-center gap-1"><BookOpen size={14}/> {mock.feat}</span>
-                  </div>
-                  <div className="text-3xl font-bold text-primary-500 mb-6">{mock.price}</div>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {mock.list.map((item, j) => (
-                      <li key={j} className="flex items-start gap-2 text-sm text-dark-900 border-b border-light-200 pb-2">
-                        <CheckCircle2 size={16} className="text-primary-500 mt-0.5 shrink-0" /> {item}
-                      </li>
-                    ))}
-                  </ul>
-                  <button className="w-full btn-primary shadow-sm hover:shadow-md mt-auto">Book Mock Test <ArrowRight size={16}/></button>
+              {/* CMA US Mock Test — Full details */}
+              <div className="liquid-glass-card flex flex-col h-full">
+                <div className="mb-4">
+                  <ClipboardList size={28} className="text-[#FFD000]" />
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* EXAM CALENDAR SECTION */}
-        <section id="calendar" className="section-padding bg-white border-t border-light-200">
-          <div className="container-custom">
-            <div className="text-center mb-10">
-              <h4 className="text-overline mb-3">Exam Calendar</h4>
-              <h2 className="heading-serif text-4xl md:text-5xl font-semibold text-dark-950">Check Available Exam Dates</h2>
-              <p className="text-dark-800 mt-4 max-w-2xl mx-auto">Browse and book available slots for your preferred certification exam.</p>
-            </div>
-
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
-              <select className="input-clean w-48 font-semibold bg-light-100 shadow-sm cursor-pointer border-light-300 text-dark-950">
-                <option>All Exams</option>
-                <option>CMA US</option>
-                <option>CELPIP</option>
-                <option>IELTS</option>
-                <option>Prometric</option>
-              </select>
-              <select className="input-clean w-48 font-semibold bg-light-100 shadow-sm cursor-pointer border-light-300 text-dark-950">
-                <option>All Locations</option>
-                <option>Calicut</option>
-                <option>Kochi</option>
-              </select>
-            </div>
-
-            <div className="flex items-center justify-center gap-4 mb-8 font-semibold text-dark-950 text-lg">
-              <button className="w-8 h-8 rounded-full border border-light-300 flex items-center justify-center hover:bg-light-200 transition-colors shadow-sm">&lt;</button>
-              <span className="flex items-center gap-2"><CalendarIcon size={18} className="text-primary-500"/> April 2026</span>
-              <button className="w-8 h-8 rounded-full border border-light-300 flex items-center justify-center hover:bg-light-200 transition-colors shadow-sm">&gt;</button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {examDates.slice(0, 16).map((slot, i) => (
-                <div key={i} className="calendar-card relative">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-dark-950 text-sm">{slot.exam}</h4>
-                    {slot.status === 'booked' ? (
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-light-200 text-dark-800 px-2 py-0.5 rounded-sm">Booked</span>
-                    ) : (
-                      <CheckCircle2 size={16} className="text-green-500" />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-dark-800 mb-1 font-medium">
-                    <MapPin size={12}/> @ {slot.location}
-                  </div>
-                  <div className="text-xs text-dark-800 font-medium mb-4 flex items-center gap-1 pl-0.5">
-                    <CalendarIcon size={11} className="text-primary-500"/> {slot.time}
-                  </div>
-                  <button 
-                    disabled={slot.status === 'booked'}
-                    className={`w-full py-2 rounded text-xs font-bold uppercase tracking-wider transition-all border break-words ${
-                      slot.status === 'booked' 
-                        ? 'bg-light-200 text-dark-800/50 cursor-not-allowed border-light-300' 
-                        : 'bg-primary-400 text-dark-950 border-primary-500 hover:bg-primary-500 shadow-sm'
-                    }`}
-                  >
-                    {slot.status === 'booked' ? 'Unavailable' : 'Book Slot'}
-                  </button>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  CMA US Mock Test
+                </h3>
+                <div className="flex items-center gap-3 text-sm text-white/50 mb-3 font-medium">
+                  <span className="flex items-center gap-1">
+                    <Clock size={14} /> 4 hours
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen size={14} /> 100 MCQs + 2 Essays
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* GET EARLY ACCESS SECTION */}
-        <section id="early-access" className="section-padding bg-[#f4ece0]">
-          <div className="container-custom">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h4 className="text-overline mb-3 text-primary-600">Exclusive Access</h4>
-                <h2 className="heading-serif text-4xl md:text-5xl font-semibold mb-6 text-dark-950">Get Early Access to Exam Dates</h2>
-                <p className="text-dark-800 mb-8 leading-relaxed">
-                  Register with us to be the first to know about opening dates for exams, especially for CMA US and CELPIP candidates. This exclusive service is designed to give you a competitive advantage in your certification journey.
-                </p>
-                <ul className="space-y-4 mb-8">
+                <div className="text-3xl font-black text-[#FFD000] mb-6">
+                  ₹2,500
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
                   {[
-                    'First to know about new exam dates',
-                    'Exclusive early bird discounts',
-                    'Priority booking for CMA US & CELPIP',
-                    'Free study material updates',
-                    'Exam tips and preparation guides'
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-dark-950 font-medium text-sm">
-                      <CheckCircle2 size={18} className="text-primary-500 shrink-0" /> {item}
+                    "Real exam simulation",
+                    "Detailed performance analysis",
+                    "Expert feedback session",
+                    "Study plan recommendations",
+                  ].map((item, j) => (
+                    <li
+                      key={j}
+                      className="flex items-start gap-2 text-sm text-white/60 border-b border-white/5 pb-2"
+                    >
+                      <CheckCircle2
+                        size={16}
+                        className="text-[#FFD000] mt-0.5 shrink-0"
+                      />{" "}
+                      {item}
                     </li>
                   ))}
                 </ul>
-                <div className="flex items-center gap-2 text-primary-600 font-bold text-sm bg-primary-400/10 px-4 py-2 rounded-lg inline-flex">
-                  <Star size={16} fill="currentColor"/> Especially for CMA US & CELPIP Candidates
-                </div>
+                <button
+                  onClick={() => {
+                    setMockSelected({
+                      name: "CMA US Mock Test",
+                      price: 2500,
+                      duration: "4 hours",
+                      questions: "100 MCQs + 2 Essays",
+                    });
+                    setMockBookingModal(true);
+                  }}
+                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#FFD000] text-dark-950 hover:bg-[#ffe44d] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,208,0,0.25)]"
+                >
+                  Book Mock Test <ArrowRight size={16} />
+                </button>
               </div>
-              
-              <div className="bg-white p-8 rounded-2xl shadow-xl border border-light-300">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-full bg-primary-400 flex items-center justify-center text-dark-950 shrink-0">
-                    <Bell size={24} />
-                  </div>
-                  <div>
-                    <h3 className="heading-serif text-2xl font-bold text-dark-950">Register for Updates</h3>
-                    <p className="text-sm text-dark-800">Join our exclusive notification list</p>
-                  </div>
+
+              {/* CELPIP Mock Test — Coming Soon */}
+              <div className="liquid-glass-card liquid-glass-card--coming-soon flex flex-col h-full">
+                <div className="mb-4">
+                  <ClipboardList size={28} className="text-white/30" />
                 </div>
-                
-                <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5 text-dark-950 pl-1">Full Name</label>
-                    <input type="text" placeholder="Enter your full name" className="input-clean" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5 text-dark-950 pl-1">Email Address</label>
-                    <input type="email" placeholder="Enter your email" className="input-clean" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5 text-dark-950 pl-1">Phone Number</label>
-                    <input type="tel" placeholder="Enter your phone number" className="input-clean" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold mb-1.5 text-dark-950 pl-1">Interested Exam</label>
-                    <select className="input-clean cursor-pointer">
-                      <option>Select an exam</option>
-                      <option>CMA US</option>
-                      <option>CELPIP</option>
-                      <option>IELTS</option>
-                      <option>Other</option>
-                    </select>
-                    <p className="text-[10px] text-dark-800 mt-1 pl-1 flex items-center gap-1"><Sparkles size={10} className="text-primary-500"/> Priority notification exams</p>
-                  </div>
-                  <button className="w-full btn-primary h-12 text-base shadow-sm hover:shadow-lg mt-2 font-bold">
-                    Register for Exclusive Updates
-                  </button>
-                  <p className="text-[10px] text-center text-dark-800 pt-2 leading-relaxed px-4">
-                    By registering, you agree to receive notifications about exam dates and related services. You can unsubscribe at any time.
-                  </p>
-                </form>
+                <h3 className="text-xl font-bold text-white/60 mb-2">
+                  CELPIP Mock Test
+                </h3>
+                <div className="flex items-center gap-3 text-sm text-white/30 mb-3 font-medium">
+                  <span className="flex items-center gap-1">
+                    <Clock size={14} /> 3 hours
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen size={14} /> Full 4-Section Test
+                  </span>
+                </div>
+                <div className="mb-6 mt-2">
+                  <div className="coming-soon-badge">✦ Coming Soon</div>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    "Full test simulation",
+                    "Speaking practice with feedback",
+                    "Writing evaluation",
+                    "Score estimate",
+                  ].map((item, j) => (
+                    <li
+                      key={j}
+                      className="flex items-start gap-2 text-sm text-white/30 border-b border-white/5 pb-2"
+                    >
+                      <CheckCircle2
+                        size={16}
+                        className="text-white/20 mt-0.5 shrink-0"
+                      />{" "}
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  disabled
+                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-white/5 text-white/30 cursor-not-allowed border border-white/10 flex items-center justify-center gap-2"
+                >
+                  Notify Me <Bell size={16} />
+                </button>
+              </div>
+
+              {/* IELTS Mock Test — Coming Soon */}
+              <div className="liquid-glass-card liquid-glass-card--coming-soon flex flex-col h-full">
+                <div className="mb-4">
+                  <ClipboardList size={28} className="text-white/30" />
+                </div>
+                <h3 className="text-xl font-bold text-white/60 mb-2">
+                  IELTS Mock Test
+                </h3>
+                <div className="flex items-center gap-3 text-sm text-white/30 mb-3 font-medium">
+                  <span className="flex items-center gap-1">
+                    <Clock size={14} /> 2h 45min
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen size={14} /> All 4 Modules
+                  </span>
+                </div>
+                <div className="mb-6 mt-2">
+                  <div className="coming-soon-badge">✦ Coming Soon</div>
+                </div>
+                <ul className="space-y-3 mb-8 flex-1">
+                  {[
+                    "Academic/General options",
+                    "Band score estimate",
+                    "Detailed feedback",
+                    "Improvement tips",
+                  ].map((item, j) => (
+                    <li
+                      key={j}
+                      className="flex items-start gap-2 text-sm text-white/30 border-b border-white/5 pb-2"
+                    >
+                      <CheckCircle2
+                        size={16}
+                        className="text-white/20 mt-0.5 shrink-0"
+                      />{" "}
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  disabled
+                  className="w-full py-3.5 rounded-xl font-bold text-sm bg-white/5 text-white/30 cursor-not-allowed border border-white/10 flex items-center justify-center gap-2"
+                >
+                  Notify Me <Bell size={16} />
+                </button>
               </div>
             </div>
           </div>
         </section>
 
-      </main>
-
-      {/* FLOATING ACTION BUTTON */}
-      {!isChatOpen && (
-        <button 
-          className="fab-ai group"
-          onClick={() => setIsChatOpen(true)}
-          title="Ask EXAM ASSIST"
+        {/* ======================================================
+            EARLY ACCESS — Claymorphism + Skeuomorphism Fusion
+            Registration with Supabase Auth + Login Toggle
+            ====================================================== */}
+        <section
+          id="early-access"
+          className="early-access-section section-padding relative overflow-hidden"
         >
-          <div className="fab-ai-blob"></div>
-          <Sparkles size={24} className="text-primary-400 group-hover:scale-110 transition-transform" />
-        </button>
-      )}
+          {/* Decorative background */}
+          <div className="ea-bg-orb ea-bg-orb--1" aria-hidden="true"></div>
+          <div className="ea-bg-orb ea-bg-orb--2" aria-hidden="true"></div>
+          <div className="ea-bg-grid" aria-hidden="true"></div>
+
+          <div className="container-custom relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* LEFT — Info panel */}
+              <div className="animate-fade-in-up">
+                <div className="ea-overline-badge">
+                  <ShieldCheck size={14} />
+                  Exclusive Candidate Access
+                </div>
+                <h2
+                  className="text-4xl md:text-5xl lg:text-[3.2rem] font-black text-dark-950 leading-[1.1] mb-6"
+                  style={{ textShadow: "2px 2px 0px rgba(255, 208, 0, 0.12)" }}
+                >
+                  Get Early Access
+                  <br />
+                  <span className="text-primary-500">to Exam Dates</span>
+                </h2>
+                <p className="text-dark-800/80 mb-8 leading-relaxed text-[15px]">
+                  Create your free FETS account to unlock priority booking,
+                  early date alerts, and an exclusive candidate dashboard —
+                  designed for CMA US and CELPIP candidates.
+                </p>
+
+                {/* Benefit cards — Claymorphism */}
+                <div className="space-y-3 mb-8">
+                  {[
+                    {
+                      icon: "🔔",
+                      title: "First to Know",
+                      desc: "Early alerts before public dates open",
+                    },
+                    {
+                      icon: "💰",
+                      title: "Exclusive Discounts",
+                      desc: "Early bird pricing on mock tests",
+                    },
+                    {
+                      icon: "🏆",
+                      title: "Priority Booking",
+                      desc: "Reserve slots before anyone else",
+                    },
+                    {
+                      icon: "📊",
+                      title: "Personal Dashboard",
+                      desc: "Track your exams, mocks & prep",
+                    },
+                    {
+                      icon: "📚",
+                      title: "Free Study Resources",
+                      desc: "Tips, guides & material updates",
+                    },
+                  ].map((item, i) => (
+                    <div key={i} className="ea-benefit-card">
+                      <span className="ea-benefit-icon">{item.icon}</span>
+                      <div>
+                        <h4 className="font-bold text-dark-950 text-sm">
+                          {item.title}
+                        </h4>
+                        <p className="text-dark-800/60 text-xs">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="ea-highlight-badge">
+                  <Star size={14} fill="currentColor" /> Especially for CMA US &
+                  CELPIP Candidates
+                </div>
+              </div>
+
+              {/* RIGHT — Auth Card (Skeuomorphism) */}
+              <div className="ea-auth-card animate-fade-in-up animation-delay-200">
+                {/* Mode Toggle */}
+                <div className="ea-mode-toggle">
+                  <button
+                    className={`ea-mode-btn ${authMode === "register" ? "ea-mode-btn--active" : ""}`}
+                    onClick={() => {
+                      setAuthMode("register");
+                      setFormError("");
+                      setFormSuccess(false);
+                    }}
+                  >
+                    <User size={14} /> Register
+                  </button>
+                  <button
+                    className={`ea-mode-btn ${authMode === "login" ? "ea-mode-btn--active" : ""}`}
+                    onClick={() => {
+                      setAuthMode("login");
+                      setFormError("");
+                      setFormSuccess(false);
+                    }}
+                  >
+                    <LogIn size={14} /> Login
+                  </button>
+                </div>
+
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="ea-icon-orb">
+                    {authMode === "register" ? (
+                      <Bell size={22} />
+                    ) : (
+                      <Lock size={22} />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-dark-950">
+                      {authMode === "register"
+                        ? "Create Your Account"
+                        : "Welcome Back"}
+                    </h3>
+                    <p className="text-xs text-dark-800/60">
+                      {authMode === "register"
+                        ? "Join 10,000+ candidates at FETS"
+                        : "Login to your candidate dashboard"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Success state */}
+                {formSuccess && (
+                  <div className="ea-success-banner">
+                    <CheckCircle2 size={20} />
+                    <div>
+                      <p className="font-bold text-sm">
+                        Account Created Successfully! 🎉
+                      </p>
+                      <p className="text-xs opacity-80">
+                        Redirecting to your dashboard...
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error state */}
+                {formError && (
+                  <div className="ea-error-banner">
+                    <X size={16} />
+                    <p className="text-sm">{formError}</p>
+                  </div>
+                )}
+
+                {/* Form */}
+                {!formSuccess && (
+                  <form
+                    className="space-y-4"
+                    onSubmit={
+                      authMode === "register" ? handleRegister : handleLogin
+                    }
+                  >
+                    {authMode === "register" && (
+                      <>
+                        <div>
+                          <label className="ea-label">Full Name</label>
+                          <div className="ea-input-wrapper">
+                            <User size={15} className="ea-input-icon" />
+                            <input
+                              name="full_name"
+                              type="text"
+                              placeholder="Enter your full name"
+                              className="ea-input"
+                              value={formData.full_name}
+                              onChange={handleFormChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="ea-label">Phone Number</label>
+                          <div className="ea-input-wrapper">
+                            <Phone size={15} className="ea-input-icon" />
+                            <input
+                              name="phone"
+                              type="tel"
+                              placeholder="+91 XXXXX XXXXX"
+                              className="ea-input"
+                              value={formData.phone}
+                              onChange={handleFormChange}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="ea-label">Interested Exam</label>
+                          <select
+                            name="interested_exam"
+                            className="ea-select"
+                            value={formData.interested_exam}
+                            onChange={handleFormChange}
+                          >
+                            <option value="">Select an exam</option>
+                            <option value="CMA US">CMA US</option>
+                            <option value="CELPIP">CELPIP</option>
+                            <option value="IELTS">IELTS</option>
+                            <option value="TOEFL">TOEFL</option>
+                            <option value="GRE">GRE</option>
+                            <option value="ACCA">ACCA</option>
+                            <option value="Other">Other</option>
+                          </select>
+                          <p className="text-[10px] text-primary-600 mt-1 pl-1 flex items-center gap-1 font-semibold">
+                            ✦ CMA US & CELPIP get priority notifications
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    <div>
+                      <label className="ea-label">Email Address</label>
+                      <div className="ea-input-wrapper">
+                        <svg
+                          width="15"
+                          height="15"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="ea-input-icon"
+                        >
+                          <rect width="20" height="16" x="2" y="4" rx="2" />
+                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                        </svg>
+                        <input
+                          name="email"
+                          type="email"
+                          placeholder="your@email.com"
+                          className="ea-input"
+                          value={formData.email}
+                          onChange={handleFormChange}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="ea-label">
+                        {authMode === "register"
+                          ? "Create Password"
+                          : "Password"}
+                      </label>
+                      <div className="ea-input-wrapper">
+                        <Lock size={15} className="ea-input-icon" />
+                        <input
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={
+                            authMode === "register"
+                              ? "Min 6 characters"
+                              : "Enter password"
+                          }
+                          className="ea-input"
+                          value={formData.password}
+                          onChange={handleFormChange}
+                          required
+                          minLength={6}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="ea-input-toggle"
+                        >
+                          {showPassword ? (
+                            <EyeOff size={15} />
+                          ) : (
+                            <Eye size={15} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="ea-submit-btn"
+                    >
+                      {formLoading ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />{" "}
+                          Processing...
+                        </>
+                      ) : authMode === "register" ? (
+                        <>Create Account & Get Early Access</>
+                      ) : (
+                        <>Login to Dashboard</>
+                      )}
+                    </button>
+
+                    <p className="text-[10px] text-center text-dark-800/50 pt-1 leading-relaxed px-4">
+                      {authMode === "register"
+                        ? "By registering, you agree to receive notifications about exam dates."
+                        : "Forgot password? Contact us at mithun@fets.in"}
+                    </p>
+                  </form>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =============================================
+            CERTIFIED TESTING PARTNERS — Moved to bottom
+            ============================================= */}
+        <section className="partners-shelf section-padding">
+          <div className="container-custom">
+            <div className="text-center mb-10">
+              <h4 className="text-overline mb-3">Certified Testing Partners</h4>
+              <h2 className="heading-serif text-3xl md:text-4xl font-semibold text-dark-950">
+                Authorized Testing Partner For
+              </h2>
+            </div>
+            <div className="flex justify-center flex-wrap items-center gap-8 md:gap-14 lg:gap-16 bg-white/80 backdrop-blur-sm border border-light-300 rounded-[2rem] px-8 py-8 md:py-10 max-w-4xl mx-auto shadow-sm">
+              <img
+                src="/images/logos/prometric.png"
+                alt="Prometric"
+                className="h-10 md:h-12 object-contain opacity-70 hover:opacity-100 transition-all duration-300"
+              />
+              <img
+                src="/images/logos/pearson-vue.png"
+                alt="Pearson VUE"
+                className="h-10 md:h-12 object-contain opacity-70 hover:opacity-100 transition-all duration-300"
+              />
+              <img
+                src="/images/logos/celpip.jpg"
+                alt="CELPIP"
+                className="h-10 md:h-12 object-contain opacity-70 hover:opacity-100 transition-all duration-300"
+              />
+              <img
+                src="/images/logos/cma-usa.png"
+                alt="CMA"
+                className="h-12 md:h-16 object-contain opacity-70 hover:opacity-100 transition-all duration-300"
+              />
+              <img
+                src="/images/logos/psi.png"
+                alt="PSI"
+                className="h-12 md:h-16 object-contain opacity-70 hover:opacity-100 transition-all duration-300"
+              />
+            </div>
+            {/* Additional partner text badges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+              {[
+                "IELTS",
+                "TOEFL / GRE (ETS)",
+                "ACCA",
+                "AWS",
+                "Cisco",
+                "CompTIA",
+                "Oracle",
+                "Microsoft",
+                "MRCS",
+              ].map((name, i) => (
+                <span
+                  key={i}
+                  className="px-4 py-2 rounded-full bg-dark-950/5 border border-dark-950/10 text-dark-800 text-xs font-medium hover:text-primary-600 hover:border-primary-400/40 hover:bg-primary-400/5 transition-all cursor-default"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* CHAT OVERLAY */}
       {isChatOpen && (
-        <AgentChatOverlay 
-          onClose={() => setIsChatOpen(false)} 
-          onOpenPanel={(panel) => setActivePanel(panel)} 
+        <AgentChatOverlay
+          onClose={() => setIsChatOpen(false)}
+          onOpenPanel={(panel) => setActivePanel(panel)}
         />
       )}
 
+      {/* MOCK EXAM BOOKING MODAL */}
+      {mockBookingModal && mockSelected && (
+        mockSelected.name === "CMA US Mock Test" || mockSelected.name.includes("CMA US") ? (
+          <CMAMockBookingModal 
+             isOpen={mockBookingModal} 
+             onClose={() => setMockBookingModal(false)}
+             mockInfo={mockSelected} 
+          />
+        ) : (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-dark-950/60 backdrop-blur-sm"
+          onClick={() => setMockBookingModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-8 max-w-lg w-full relative border border-light-300 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6 relative z-10">
+              <h3 className="text-xl font-bold text-dark-950">
+                Book Mock Exam
+              </h3>
+              <button
+                onClick={() => setMockBookingModal(false)}
+                className="fixed-close-btn p-2 bg-light-100 hover:bg-light-200 rounded-full text-dark-800 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {mockFormSuccess ? (
+              <div className="py-8 text-center animate-fade-in-up">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h4 className="text-lg font-bold text-dark-950 mb-2">
+                  Request Received!
+                </h4>
+                <p className="text-dark-800/80">
+                  Our team will contact you shortly to confirm your mock exam
+                  slot.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6 p-4 rounded-xl bg-primary-400/10 border border-primary-500/20 relative z-10">
+                  <h4 className="text-primary-600 font-semibold">
+                    {mockSelected.name}
+                  </h4>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-dark-800 font-medium">
+                    <span>{mockSelected.duration}</span>
+                    <span>{mockSelected.questions}</span>
+                    <span className="text-dark-950 font-bold ml-auto">
+                      ₹{mockSelected.price.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={handleBookMock}
+                  className="space-y-4 relative z-10 text-left cursor-default"
+                >
+                  <div>
+                    <label className="block text-sm font-bold text-dark-950 mb-1.5">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={mockForm.name}
+                      onChange={(e) =>
+                        setMockForm({ ...mockForm, name: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-xl bg-light-100 border border-light-300 text-dark-900 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-all font-medium"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-dark-950 mb-1.5">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={mockForm.email}
+                      onChange={(e) =>
+                        setMockForm({ ...mockForm, email: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-xl bg-light-100 border border-light-300 text-dark-900 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-all font-medium"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-dark-950 mb-1.5">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={mockForm.phone}
+                      onChange={(e) =>
+                        setMockForm({ ...mockForm, phone: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-xl bg-light-100 border border-light-300 text-dark-900 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-all font-medium"
+                      placeholder="+91 XXXXX XXXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-dark-950 mb-1.5">
+                      Preferred Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={mockForm.date}
+                      onChange={(e) =>
+                        setMockForm({ ...mockForm, date: e.target.value })
+                      }
+                      className="w-full px-4 py-3 rounded-xl bg-light-100 border border-light-300 text-dark-900 focus:outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400 transition-all font-medium cursor-text"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={mockFormLoading}
+                    className="w-full btn-nav mt-6 bg-[#FFD000] text-dark-950 border-transparent hover:bg-[#ffe44d] py-3.5 rounded-xl text-base flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,208,0,0.25)] font-bold disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {mockFormLoading ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <>
+                        Request Booking <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+        )
+      )}
+
       {/* LOCATION MODALS */}
-      {activeLocationModal === 'calicut' && (
-        <LocationModal 
+      {activeLocationModal === "calicut" && (
+        <LocationModal
           title="Calicut Centre"
           address="Forun Testing & Educational Services<br/>4th Floor, Kadooli Tower<br/>West Nadakkavu, Vandipetta Junction<br/>Calicut, Kerala, India – 673011"
           phone="+91 495 491 5936"
           reach={{
             train: "Calicut Railway Station (Approx. 3 KM)",
             bus: "Calicut New Bus Stand (Approx. 4 KM)",
-            air: "Calicut International Airport (CCJ) (Approx. 22 KM)"
+            air: "Calicut International Airport (CCJ) (Approx. 22 KM)",
           }}
           mapUrl="https://www.google.com/maps/dir//4th+Floor,+Forun+Educational+and+Testing+Services,+Kadooli+Tower+JN,+West+Nadakkave,+Vandipetta,+Bilathikkulam,+Kozhikode,+Kerala+673011"
           onClose={() => setActiveLocationModal(null)}
-          onAskAi={() => { setActiveLocationModal(null); setIsChatOpen(true); }}
+          onAskAi={() => {
+            setActiveLocationModal(null);
+            setIsChatOpen(true);
+          }}
         />
       )}
-      {activeLocationModal === 'kochi' && (
-        <LocationModal 
+      {activeLocationModal === "kochi" && (
+        <LocationModal
           title="Kochi Centre"
           address="Forun Testing & Educational Services<br/>6th Floor, Manjooran Estate<br/>Behind MRA Hotel, Bypass Junction<br/>Edappally, Kochi, Kerala 682024"
           phone="+91 484 454 1957"
           reach={{
-            train: "Ernakulam Town (ERN) – 6 KM | Ernakulam Junction (ERS) - 8.7 KM",
+            train:
+              "Ernakulam Town (ERN) – 6 KM | Ernakulam Junction (ERS) - 8.7 KM",
             metro: "Edapally Metro Station - 350 Meters",
             bus: "Kaloor Bus Stand - 5 KM | Vytilla Hub – 8.4 KM",
-            air: "Cochin International Airport (COK) (Approx. 28 KM)"
+            air: "Cochin International Airport (COK) (Approx. 28 KM)",
           }}
           mapUrl="https://www.google.com/maps/dir//6th+Floor,+Manjooran+Estate,Bewhind+MRA+Hotel,+Bypass+Junction,+Edappally,+Kochi,+Kerala+682024"
           onClose={() => setActiveLocationModal(null)}
-          onAskAi={() => { setActiveLocationModal(null); setIsChatOpen(true); }}
+          onAskAi={() => {
+            setActiveLocationModal(null);
+            setIsChatOpen(true);
+          }}
         />
       )}
 
-      {/* SLIDE-IN PANELS (Placeholder for now since we are replacing the logic) */}
+      {/* SKEUOMORPHIC WORKFLOW MODAL FOR EXAM ASSIST */}
       {activePanel && (
-        <div className="panel-backdrop z-50">
-          <div className="panel-drawer p-6 flex items-center justify-center font-bold text-center">
-            Functionality Triggered: {activePanel.toUpperCase()}
-            <button onClick={() => setActivePanel(null)} className="absolute top-4 right-4 p-2 bg-light-200 rounded-full hover:bg-light-300">
-              <X size={20}/>
-            </button>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/70 backdrop-blur-md"
+          onClick={() => setActivePanel(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-[28px] overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.15)] border border-[#ffffff10]"
+            style={{
+              background: "linear-gradient(145deg, #16181b, #0d0f12)",
+              color: "#fff",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Area */}
+            <div className="p-6 pb-4 border-b border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.05)] bg-dark-950 border border-white/5">
+                  {activePanel === "exam-dates" && (
+                    <CalendarIcon size={22} className="text-[#FFD000]" />
+                  )}
+                  {activePanel === "booking" && (
+                    <ClipboardList size={22} className="text-[#FFD000]" />
+                  )}
+                  {activePanel === "contact" && (
+                    <MapPin size={22} className="text-[#FFD000]" />
+                  )}
+                  {activePanel === "mock-exams" && (
+                    <BookOpen size={22} className="text-[#FFD000]" />
+                  )}
+                  {!["exam-dates", "booking", "contact", "mock-exams"].includes(
+                    activePanel,
+                  ) && <ShieldCheck size={22} className="text-[#FFD000]" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-white/95">
+                    {activePanel === "exam-dates" && "Check Availability"}
+                    {activePanel === "booking" && "Book Your Exam"}
+                    {activePanel === "contact" && "Contact Support"}
+                    {activePanel === "mock-exams" && "Mock Exams"}
+                    {![
+                      "exam-dates",
+                      "booking",
+                      "contact",
+                      "mock-exams",
+                    ].includes(activePanel) && "Exam Assist Action"}
+                  </h3>
+                  <p className="text-xs text-[#FFD000]/70 font-bold uppercase tracking-wider mt-0.5">
+                    Secure Workflow Initiated
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActivePanel(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors border border-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] text-white/50"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="p-6 space-y-6">
+              {activePanel === "contact" ? (
+                <div className="space-y-4">
+                  <div className="p-5 rounded-2xl bg-dark-950 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] border border-white/5">
+                    <div className="flex items-start gap-4">
+                      <Phone size={20} className="text-[#FFD000]/80 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-white/90">
+                          Call Us Anytime
+                        </h4>
+                        <p className="text-base text-[#FFD000] font-bold mt-1 tracking-wide">
+                          +91 9605686000
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-dark-950 shadow-[inset_0_2px_8px_rgba(0,0,0,0.4)] border border-white/5">
+                    <div className="flex items-start gap-4">
+                      <MapPin size={20} className="text-[#FFD000]/80 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-white/90">
+                          Calicut Centre
+                        </h4>
+                        <p className="text-sm text-white/60 mt-1 leading-relaxed">
+                          First Floor, Rahmath Building, IG Road, Kerala
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActivePanel(null)}
+                    className="w-full py-4 rounded-xl font-bold bg-[#FFD000] text-dark-950 shadow-[0_4px_15px_rgba(255,208,0,0.15),inset_0_2px_0_rgba(255,255,255,0.4)] hover:brightness-105 active:scale-[0.98] transition-all"
+                  >
+                    Return to Chat
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-white/70 leading-relaxed font-medium">
+                    Our team provides personalized guidance for exam slots,
+                    preparation, and booking. Let us know exactly what you need.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <label className="block text-[11px] font-bold text-white/40 mb-2 uppercase tracking-widest pl-1">
+                        Your Requirement
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={
+                          activePanel === "exam-dates"
+                            ? "Checking dates for..."
+                            : activePanel === "mock-exams"
+                              ? "Looking for mock tests in..."
+                              : "Booking an exam..."
+                        }
+                        className="w-full px-5 py-3.5 rounded-xl bg-dark-950 border border-white/5 text-white/90 focus:border-[#FFD000]/50 focus:ring-1 focus:ring-[#FFD000]/50 outline-none shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)] transition-all font-medium"
+                      />
+                    </div>
+                    <div className="relative">
+                      <label className="block text-[11px] font-bold text-white/40 mb-2 uppercase tracking-widest pl-1">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+91 XXXXX XXXXX"
+                        className="w-full px-5 py-3.5 rounded-xl bg-dark-950 border border-white/5 text-white/90 focus:border-[#FFD000]/50 focus:ring-1 focus:ring-[#FFD000]/50 outline-none shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)] transition-all font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      alert(
+                        "Our Exam Assist team has received your request. We will connect with you via WhatsApp/Call shortly!",
+                      );
+                      setActivePanel(null);
+                    }}
+                    className="w-full py-4 mt-2 rounded-xl font-bold text-sm bg-gradient-to-b from-white/10 to-white/5 border border-white/10 text-white shadow-[0_4px_15px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] hover:from-white/[0.15] hover:to-white/[0.08] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  >
+                    Send to Support Team{" "}
+                    <ArrowRight size={16} className="text-[#FFD000]" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
 
+      {/* FOOTER */}
+      <Footer />
     </div>
   );
 }
 
-// Needed because it's not imported directly above
-function Star({ size, ...props }) {
+// Neural Orb inline (small version for buttons)
+function NeuralOrbInline() {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
+    <span
+      style={{
+        display: "inline-flex",
+        width: 18,
+        height: 18,
+        position: "relative",
+        verticalAlign: "middle",
+      }}
+    >
+      <span
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: "#FFD000",
+          transform: "translate(-50%, -50%)",
+          boxShadow: "0 0 8px rgba(255, 208, 0, 0.6)",
+        }}
+      />
+      <span
+        style={{
+          position: "absolute",
+          inset: 2,
+          borderRadius: "50%",
+          border: "1.5px solid rgba(255, 208, 0, 0.3)",
+          borderTopColor: "transparent",
+          animation: "orb-ring-spin 3s linear infinite",
+        }}
+      />
+      <span
+        style={{
+          position: "absolute",
+          inset: -1,
+          borderRadius: "50%",
+          border: "1px solid rgba(255, 208, 0, 0.15)",
+          borderBottomColor: "transparent",
+          animation: "orb-ring-spin 5s linear infinite reverse",
+        }}
+      />
+    </span>
   );
 }
 
-function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi }) {
+function LocationModal({
+  title,
+  address,
+  phone,
+  reach,
+  mapUrl,
+  onClose,
+  onAskAi,
+}) {
   return (
-    <div className="fixed inset-0 bg-dark-950/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden relative border border-light-300 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-light-100 hover:bg-light-200 rounded-full transition-colors text-dark-800 z-10">
+    <div
+      className="fixed inset-0 bg-dark-950/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden relative border border-light-300 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 bg-light-100 hover:bg-light-200 rounded-full transition-colors text-dark-800 z-10"
+        >
           <X size={20} />
         </button>
         <div className="p-8">
@@ -349,59 +1363,95 @@ function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi 
             <div className="w-12 h-12 rounded-full bg-primary-400/20 text-primary-600 flex items-center justify-center shrink-0">
               <MapPin size={24} />
             </div>
-            <h2 className="heading-serif text-3xl md:text-4xl font-bold text-dark-950">{title}</h2>
+            <h2 className="heading-serif text-3xl md:text-4xl font-bold text-dark-950">
+              {title}
+            </h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 text-left">
             <div>
-              <h3 className="text-[10px] font-bold text-dark-800 uppercase tracking-widest mb-4">Address</h3>
-              <p className="text-dark-950 font-medium leading-relaxed text-sm lg:text-base mb-6" dangerouslySetInnerHTML={{ __html: address }}></p>
-              
+              <h3 className="text-[10px] font-bold text-dark-800 uppercase tracking-widest mb-4">
+                Address
+              </h3>
+              <p
+                className="text-dark-950 font-medium leading-relaxed text-sm lg:text-base mb-6"
+                dangerouslySetInnerHTML={{ __html: address }}
+              ></p>
+
               <div className="flex items-center gap-3 text-primary-600 font-bold mb-8 bg-primary-400/10 p-3 rounded-lg w-max">
                 <Phone size={18} /> {phone}
               </div>
 
               <div className="flex flex-col gap-3">
-                <button onClick={onAskAi} className="btn-primary w-full flex items-center justify-center gap-2 shadow-sm relative overflow-hidden group">
-                  <Sparkles size={16} className="text-dark-950" /> Message via EXAM ASSIST
+                <button
+                  onClick={onAskAi}
+                  className="btn-primary w-full flex items-center justify-center gap-2 shadow-sm relative overflow-hidden group"
+                >
+                  <NeuralOrbInline /> Message via EXAM ASSIST
                   <div className="absolute top-0 right-0 w-8 h-8 bg-white opacity-20 rounded-bl-full group-hover:scale-[3] transition-transform duration-500"></div>
                 </button>
-                <a href="mailto:mithun@fets.in" className="btn-secondary w-full flex items-center justify-center gap-2 border-primary-500 text-primary-600 hover:bg-primary-50 transition-colors">
-                   Send Message Us
+                <a
+                  href="mailto:mithun@fets.in"
+                  className="btn-secondary w-full flex items-center justify-center gap-2 border-primary-500 text-primary-600 hover:bg-primary-50 transition-colors"
+                >
+                  Send Message Us
                 </a>
               </div>
             </div>
-            
+
             <div className="bg-light-100 p-6 rounded-xl border border-light-200">
-              <h3 className="text-[10px] font-bold text-dark-800 uppercase tracking-widest mb-5">How to Reach Us</h3>
+              <h3 className="text-[10px] font-bold text-dark-800 uppercase tracking-widest mb-5">
+                How to Reach Us
+              </h3>
               <ul className="space-y-5 text-sm">
                 {reach.train && (
                   <li>
-                    <strong className="block text-dark-950 mb-1 lg:text-base">By Train:</strong>
-                    <span className="text-dark-800 leading-snug block">{reach.train}</span>
+                    <strong className="block text-dark-950 mb-1 lg:text-base">
+                      By Train:
+                    </strong>
+                    <span className="text-dark-800 leading-snug block">
+                      {reach.train}
+                    </span>
                   </li>
                 )}
                 {reach.metro && (
                   <li>
-                    <strong className="block text-dark-950 mb-1 lg:text-base">By Metro:</strong>
-                    <span className="text-dark-800 leading-snug block">{reach.metro}</span>
+                    <strong className="block text-dark-950 mb-1 lg:text-base">
+                      By Metro:
+                    </strong>
+                    <span className="text-dark-800 leading-snug block">
+                      {reach.metro}
+                    </span>
                   </li>
                 )}
                 {reach.bus && (
                   <li>
-                    <strong className="block text-dark-950 mb-1 lg:text-base">By Bus:</strong>
-                    <span className="text-dark-800 leading-snug block">{reach.bus}</span>
+                    <strong className="block text-dark-950 mb-1 lg:text-base">
+                      By Bus:
+                    </strong>
+                    <span className="text-dark-800 leading-snug block">
+                      {reach.bus}
+                    </span>
                   </li>
                 )}
                 {reach.air && (
                   <li>
-                    <strong className="block text-dark-950 mb-1 lg:text-base">By Air:</strong>
-                    <span className="text-dark-800 leading-snug block">{reach.air}</span>
+                    <strong className="block text-dark-950 mb-1 lg:text-base">
+                      By Air:
+                    </strong>
+                    <span className="text-dark-800 leading-snug block">
+                      {reach.air}
+                    </span>
                   </li>
                 )}
               </ul>
-              
-              <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="mt-8 block w-full bg-dark-950 text-primary-400 font-bold py-3.5 rounded hover:bg-dark-900 transition-colors text-sm shadow-md flex items-center justify-center gap-2 border border-dark-950">
+
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-8 block w-full bg-dark-950 text-primary-400 font-bold py-3.5 rounded hover:bg-dark-900 transition-colors text-sm shadow-md flex items-center justify-center gap-2 border border-dark-950"
+              >
                 <MapPin size={16} /> Open in Google Maps
               </a>
             </div>

@@ -17,9 +17,10 @@ const partners = [
   { name: 'Microsoft', logo: '/images/logos/microsoft.png' },
 ];
 
+const words = ['CMA US', 'CELPIP', 'IELTS', 'TOEFL', 'AWS', 'MRCS'];
+
 export default function Hero() {
   const [currentWord, setCurrentWord] = useState(0);
-  const words = ['CMA US', 'CELPIP', 'IELTS', 'TOEFL', 'AWS', 'MRCS'];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,13 +59,11 @@ export default function Hero() {
 
       {/* ===== MAIN CONTENT ===== */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center flex-1 flex flex-col justify-center">
-        {/* Forun logo */}
+        {/* Brand Name */}
         <div className="flex justify-center mb-8">
-          <img
-            src="/images/logos/forun-logo.png"
-            alt="Forun Educational & Testing Services"
-            className="h-14 sm:h-16 w-auto object-contain drop-shadow-lg"
-          />
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-wide text-[#FFD700] drop-shadow-lg" style={{ textShadow: '0 2px 10px rgba(255, 215, 0, 0.3)' }}>
+            FORUN EDUCATIONAL & TESTING SERVICES
+          </h2>
         </div>
 
         {/* Badge */}
