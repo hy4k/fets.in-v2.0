@@ -146,87 +146,158 @@ export default function App() {
 
 function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi }) {
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-dark-950/60 p-4 backdrop-blur-sm"
-      onClick={onClose}
-      role="presentation"
-    >
-      <div
-        className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-light-300 bg-white shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button type="button" onClick={onClose} className="absolute top-4 right-4 z-10 rounded-full bg-light-100 p-2 text-dark-800 transition-colors hover:bg-light-200">
-          <X size={20} />
-        </button>
-        <div className="p-8">
-          <div className="mb-8 flex items-center gap-3 border-b border-light-200 pb-6">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-400/20 text-primary-600">
-              <MapPin size={24} />
-            </div>
-            <h2 className="heading-serif text-3xl font-bold text-dark-950 md:text-4xl">{title}</h2>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content !max-w-4xl" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+           <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl bg-[#FFD000]/10 flex items-center justify-center text-[#FFD000] border border-[#FFD000]/20">
+               <MapPin size={20} />
+             </div>
+             <div>
+               <h3 className="modal-title font-black">{title}</h3>
+               <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Authorized Test Infrastructure</p>
+             </div>
           </div>
+          <button className="skeuo-close" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
 
-          <div className="grid grid-cols-1 gap-8 text-left md:grid-cols-2 md:gap-12">
-            <div>
-              <h3 className="mb-4 text-[10px] font-bold tracking-widest text-dark-800 uppercase">Address</h3>
-              <p className="mb-6 text-sm leading-relaxed font-medium text-dark-950 lg:text-base" dangerouslySetInnerHTML={{ __html: address }} />
+        <div className="modal-body">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="space-y-8">
+                 <div>
+                    <label className="label-premium">Testing Venue Address</label>
+                    <p className="text-white text-lg font-bold leading-relaxed tracking-tight" dangerouslySetInnerHTML={{ __html: address }} />
+                 </div>
+                 
+                 <div className="flex flex-wrap gap-4">
+                    <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/5 flex items-center gap-3 shadow-inner">
+                       <Phone size={16} className="text-[#FFD000]" />
+                       <span className="text-sm font-black text-white">{phone}</span>
+                    </div>
+                 </div>
 
-              <div className="mb-8 flex w-max items-center gap-3 rounded-lg bg-primary-400/10 p-3 font-bold text-primary-600">
-                <Phone size={18} /> {phone}
+                 <div className="flex flex-col gap-3 py-4">
+                    <button onClick={onAskAi} className="h-14 w-full rounded-2xl bg-[#FFD000] text-dark-950 font-black text-xs uppercase tracking-widest hover:bg-[#ffe44d] transition-all flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(255,208,0,0.15)] group">
+                       <Sparkles size={16} className="group-hover:animate-spin" /> Message Live Assistant
+                    </button>
+                    <a href="mailto:mithun@fets.in" className="h-14 w-full rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2 shadow-xl">
+                       <Mail size={16} className="text-white/40" /> Email Support
+                    </a>
+                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <button type="button" onClick={onAskAi} className="btn-primary group relative w-full overflow-hidden shadow-sm">
-                  <Sparkles size={16} /> Message via EXAM ASSIST
-                  <div className="absolute top-0 right-0 h-8 w-8 rounded-bl-full bg-white opacity-20 transition-transform duration-500 group-hover:scale-[3]" />
-                </button>
-                <a href="mailto:mithun@fets.in" className="btn-secondary flex w-full items-center justify-center gap-2 border-primary-500 text-primary-600 hover:bg-primary-50">
-                  Email us
-                </a>
+              <div className="p-8 rounded-[32px] bg-black/60 border border-white/5 shadow-inner">
+                 <h4 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-6 border-b border-white/5 pb-4 flex items-center gap-2">
+                    <Compass size={14} className="text-[#FFD000]" /> Transit Directions
+                 </h4>
+                 <ul className="space-y-6">
+                    {Object.entries(reach).map(([key, val]) => (
+                      <li key={key} className="flex gap-4">
+                         <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                            {key === 'train' ? <Train size={14} className="text-orange-400" /> : 
+                             key === 'metro' ? <Navigation size={14} className="text-blue-400" /> :
+                             key === 'bus' ? <Bus size={14} className="text-emerald-400" /> :
+                             <Plane size={14} className="text-[#FFD000]" />}
+                         </div>
+                         <div>
+                            <span className="block text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">{key} Access</span>
+                            <span className="block text-xs font-bold text-white/70 leading-snug">{val}</span>
+                         </div>
+                      </li>
+                    ))}
+                 </ul>
+
+                 <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="mt-10 h-14 w-full rounded-2xl bg-white/[0.05] border border-white/10 text-white font-black text-[11px] uppercase tracking-widest hover:bg-[#FFD000] hover:text-dark-950 hover:border-transparent transition-all flex items-center justify-center gap-3 group shadow-md">
+                    <Navigation size={16} /> Open Physical Map <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                 </a>
               </div>
-            </div>
-
-            <div className="rounded-xl border border-light-200 bg-light-100 p-6">
-              <h3 className="mb-5 text-[10px] font-bold tracking-widest text-dark-800 uppercase">How to reach us</h3>
-              <ul className="space-y-5 text-sm">
-                {reach.train && (
-                  <li>
-                    <strong className="mb-1 block text-dark-950 lg:text-base">By train</strong>
-                    <span className="block leading-snug text-dark-800">{reach.train}</span>
-                  </li>
-                )}
-                {reach.metro && (
-                  <li>
-                    <strong className="mb-1 block text-dark-950 lg:text-base">By metro</strong>
-                    <span className="block leading-snug text-dark-800">{reach.metro}</span>
-                  </li>
-                )}
-                {reach.bus && (
-                  <li>
-                    <strong className="mb-1 block text-dark-950 lg:text-base">By bus</strong>
-                    <span className="block leading-snug text-dark-800">{reach.bus}</span>
-                  </li>
-                )}
-                {reach.air && (
-                  <li>
-                    <strong className="mb-1 block text-dark-950 lg:text-base">By air</strong>
-                    <span className="block leading-snug text-dark-800">{reach.air}</span>
-                  </li>
-                )}
-              </ul>
-
-              <a
-                href={mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-8 flex w-full items-center justify-center gap-2 rounded border border-dark-950 bg-dark-950 py-3.5 text-sm font-bold text-primary-400 shadow-md hover:bg-dark-900"
-              >
-                <MapPin size={16} /> Open in Google Maps
-              </a>
-            </div>
-          </div>
+           </div>
         </div>
       </div>
     </div>
   );
 }
+
+const Train = ({ size, className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <rect width="16" height="15" x="4" y="3" rx="2" />
+    <path d="M4 11h16" />
+    <path d="M12 3v8" />
+    <path d="m8 19-2 3" />
+    <path d="m18 22-2-3" />
+    <path d="M8 15h.01" />
+    <path d="M16 15h.01" />
+  </svg>
+);
+
+const Compass = ({ size, className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+  </svg>
+);
+
+const Bus = ({ size, className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <rect width="16" height="12" x="4" y="3" rx="2" />
+    <path d="M4 11h16" />
+    <path d="M8 3v8" />
+    <path d="M16 3v8" />
+    <path d="M6 15h.01" />
+    <path d="M18 15h.01" />
+    <path d="M6 19v2" />
+    <path d="M18 21v-2" />
+  </svg>
+);
+
+const Plane = ({ size, className }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.5" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.7 5.2c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z" />
+  </svg>
+);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, MapPin, Phone, Mail, Clock, Train, Bus, Plane, Navigation, ArrowRight } from 'lucide-react';
+import { X, MapPin, Phone, Mail, Clock, Train, Bus, Plane, Navigation, ArrowRight, Share2, Compass } from 'lucide-react';
 import { centers } from '../../data/siteData';
 
 const modeIcons = { Train, Bus, Air: Plane, Metro: Train };
@@ -9,96 +9,142 @@ export default function ContactPanel({ onClose }) {
   const center = centers.find((c) => c.id === active);
 
   return (
-    <>
-      <div className="panel-overlay" onClick={onClose} />
-      <div className="panel-slide">
-        <div className="panel-header">
-          <div className="flex items-center gap-2">
-            <MapPin size={18} className="text-rose-400" />
-            <h3 className="text-white font-semibold">Our Locations</h3>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content !max-w-2xl" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+           <div className="flex items-center gap-3">
+             <div className="w-10 h-10 rounded-xl bg-[#FFD000]/10 flex items-center justify-center text-[#FFD000] border border-[#FFD000]/20">
+               <Compass size={20} />
+             </div>
+             <div>
+               <h3 className="modal-title">Our Network</h3>
+               <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Authorized Test Centres</p>
+             </div>
           </div>
-          <button className="panel-close-btn" onClick={onClose}><X size={18} /></button>
+          <button className="skeuo-close" onClick={onClose}>
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="panel-body">
-          {/* Phone banner */}
-          <a href="tel:+919605686000" className="flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-400/10 border border-rose-400/20 mb-5 hover:bg-rose-400/15 transition-colors">
-            <Phone size={16} className="text-rose-400" />
-            <span className="text-rose-300 font-bold">+91 9605686000</span>
-          </a>
+        <div className="modal-body">
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Sidebar / Tabs */}
+            <div className="md:w-56 shrink-0 space-y-6">
+               <div>
+                  <label className="label-premium">Select Location</label>
+                  <div className="flex flex-col gap-2">
+                    {centers.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => setActive(c.id)}
+                        className={`w-full p-4 rounded-2xl flex flex-col gap-1 transition-all ${
+                          active === c.id
+                            ? 'bg-[#FFD000] text-dark-950 shadow-lg scale-[1.02]'
+                            : 'bg-white/5 border border-white/5 text-white/40 hover:bg-white/10'
+                        }`}
+                      >
+                        <span className="text-[11px] font-black uppercase tracking-widest leading-none">Centre</span>
+                        <span className="text-sm font-black tracking-tight">{c.name.replace(' Centre', '')}</span>
+                      </button>
+                    ))}
+                  </div>
+               </div>
 
-          {/* Centre tabs */}
-          <div className="flex gap-2 mb-5">
-            {centers.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActive(c.id)}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-all ${
-                  active === c.id
-                    ? 'bg-rose-400/15 text-rose-300 border border-rose-400/30'
-                    : 'bg-zinc-800/50 text-zinc-500 border border-zinc-800 hover:border-zinc-600'
-                }`}
-              >
-                <MapPin size={14} />{c.name.replace(' Centre', '')}
-              </button>
-            ))}
-          </div>
-
-          {/* Center image */}
-          {center.images?.[0] && (
-            <img src={center.images[0]} alt={center.name} className="panel-image mb-5" />
-          )}
-
-          {/* Details */}
-          <div className="space-y-4 mb-6">
-            <div className="flex items-start gap-3">
-              <MapPin size={16} className="text-rose-400 mt-0.5 flex-shrink-0" />
-              <p className="text-zinc-300 text-sm">{center.address}</p>
+               <div className="p-5 rounded-2xl bg-[#FFD000]/5 border border-[#FFD000]/10">
+                  <p className="text-[10px] font-bold text-[#FFD000]/60 uppercase tracking-[0.2em] mb-2">Central Support</p>
+                  <a href="tel:+919605686000" className="text-white font-black text-sm hover:text-[#FFD000] transition-colors flex items-center gap-2">
+                    <Phone size={14} /> +91 9605686000
+                  </a>
+               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Phone size={16} className="text-rose-400 flex-shrink-0" />
-              <div className="text-sm">
-                <a href={`tel:${center.phone.replace(/\s/g, '')}`} className="text-zinc-300 hover:text-rose-400 transition-colors">{center.phone}</a>
+
+            {/* Content Area */}
+            <div className="flex-1 space-y-6">
+              {/* Centre Display */}
+              <div className="relative rounded-3xl overflow-hidden border border-white/5 group shadow-2xl">
+                 <img src={center.images?.[0] || '/images/facility/calicut-reception.jpg'} alt={center.name} className="w-full h-40 object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/40 to-transparent" />
+                 <div className="absolute bottom-4 left-5">
+                    <div className="flex items-center gap-2 mb-1">
+                       <MapPin size={12} className="text-[#FFD000]" />
+                       <span className="text-[9px] font-black text-[#FFD000] uppercase tracking-widest">KERALA, INDIA</span>
+                    </div>
+                    <h4 className="text-xl font-black text-white tracking-tight">{center.name}</h4>
+                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Mail size={16} className="text-rose-400 flex-shrink-0" />
-              <a href={`mailto:${center.email}`} className="text-zinc-300 text-sm hover:text-rose-400 transition-colors">{center.email}</a>
-            </div>
-            <div className="flex items-center gap-3">
-              <Clock size={16} className="text-rose-400 flex-shrink-0" />
-              <p className="text-zinc-300 text-sm">{center.hours}</p>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-1 gap-4">
+                 <div className="card-premium flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                       <MapPin size={16} className="text-[#FFD000]" />
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Postal Address</p>
+                       <p className="text-xs font-bold text-white/80 leading-relaxed tracking-tight">{center.address}</p>
+                    </div>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="card-premium flex items-start gap-4">
+                       <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                          <Clock size={16} className="text-[#FFD000]" />
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Timing</p>
+                          <p className="text-xs font-bold text-white/80 tracking-tight">{center.hours}</p>
+                       </div>
+                    </div>
+                    <div className="card-premium flex items-start gap-4">
+                       <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                          <Mail size={16} className="text-[#FFD000]" />
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Email</p>
+                          <a href={`mailto:${center.email}`} className="text-xs font-bold text-white/80 hover:text-[#FFD000] transition-colors truncate block max-w-[120px] tracking-tight">{center.email}</a>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Transit */}
+              <div>
+                 <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                   <Share2 size={12} /> Connectivity & Access
+                 </h4>
+                 <div className="grid grid-cols-2 gap-3">
+                   {center.directions.map((d, i) => {
+                     const Icon = modeIcons[d.mode] || Navigation;
+                     return (
+                       <div key={i} className="px-4 py-3 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center gap-3">
+                         <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
+                           <Icon size={12} />
+                         </div>
+                         <div className="min-w-0">
+                           <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-0.5">{d.mode}</p>
+                           <p className="text-[11px] font-bold text-white/70 truncate tracking-tight">{d.detail}</p>
+                         </div>
+                       </div>
+                     );
+                   })}
+                 </div>
+              </div>
+
+              {/* CTA */}
+              <a
+                href={center.mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full h-14 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-[11px] hover:bg-[#FFD000] hover:text-dark-950 transition-all flex items-center justify-center gap-3 group shadow-md"
+              >
+                <Navigation size={18} />
+                Map Directions
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </a>
             </div>
           </div>
-
-          {/* Directions */}
-          <h4 className="text-white font-medium text-sm mb-3">How to Reach</h4>
-          <div className="space-y-2 mb-6">
-            {center.directions.map((d, i) => {
-              const Icon = modeIcons[d.mode] || Navigation;
-              return (
-                <div key={i} className="flex items-start gap-2.5">
-                  <Icon size={14} className="mt-0.5 flex-shrink-0 text-orange-400" />
-                  <span className="text-zinc-400 text-sm">
-                    <span className="text-zinc-300 font-medium">{d.mode}:</span> {d.detail}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <a
-            href={center.mapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary w-full justify-center rounded-xl"
-          >
-            <Navigation size={16} />
-            Open in Google Maps
-            <ArrowRight size={14} />
-          </a>
         </div>
       </div>
-    </>
+    </div>
   );
 }

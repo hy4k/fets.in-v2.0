@@ -1,0 +1,13 @@
+97a491c fix: resolve package.json merge conflicts
+71bdbf9 Resolve unmerged files
+88c0fe6 feat: Complete CMA Mock booking, upgrade FETS UI/UX, database migrations and dependencies
+3d02be9 chore: rebuild dist after .env workflow (empty Supabase keys in local .env)
+0b85bb8 fix: avoid Supabase crash when env vars are missing
+d1083fa feat: edtech marketing overhaul with student resources and Supabase leads
+73657de build: commit pre-built dist with Supabase env vars baked in
+21e77ed feat: update booking & admin to match FETS Excel tracking format
+e06d1d4 feat: add Manage Seats tab to admin panel with inline editing
+7a9b125 feat: CMA US Mock Exam booking system with Excel slot management
+c919e7e fix: ensure nodjs >= 22.12.0 for vite build
+e70daf7 feat: FETS Platform UI Redesign - Hero overhaul, Location modals, Animated Nav
+2b3a9dd Add Hostinger MCP configuration

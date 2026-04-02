@@ -1,0 +1,21 @@
+commit 88c0fe67a25cf6cd8d93d988d3e38279678ab65f
+Author: hy4k <mithun@fets.in>
+Date:   Thu Apr 2 04:47:23 2026 +0530
+
+    feat: Complete CMA Mock booking, upgrade FETS UI/UX, database migrations and dependencies
+
+ package-lock.json                      |   58 ++
+ package.json                           |    1 +
+ seed.js                                |   35 +
+ seed.sql                               |   32 +
+ src/App.jsx                            | 1576 +++++++++++++++++++++++-----
+ src/components/AgentChatOverlay.jsx    |   85 +-
+ src/components/CMAMockBookingModal.jsx |  497 +++++++++
+ src/components/Footer.jsx              |  289 ++++--
+ src/components/Hero.jsx                |   13 +-
+ src/components/HeroBackground.jsx      |  215 ++++
+ src/data/siteData.js                   |  304 +-----
+ src/index.css                          | 1782 ++++++++++++++++++++++++++++++--
+ src/main.jsx                           |    9 +-
+ src/pages/CandidateDashboard.jsx       |  152 +++
+ 14 files changed, 4252 insertions(+), 796 deletions(-)

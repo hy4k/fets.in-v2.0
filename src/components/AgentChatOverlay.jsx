@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Calendar, ClipboardList, BookOpen, MapPin, Sparkles, X } from 'lucide-react';
-
+import { Send, Calendar, ClipboardList, BookOpen, MapPin, Sparkles, X, Bot, User, CheckCircle, ArrowRight } from 'lucide-react';
 
 /* ===== DETECT & RESPOND (simplified) ===== */
 function detectIntent(text) {
@@ -16,24 +15,24 @@ function detectIntent(text) {
 function respond(intent) {
   const actions = (list) => list.map((a) => ({ label: a[0], intent: a[1], icon: a[2] }));
   switch (intent) {
-    case 'exam_dates': return { content: `I'll open the calendar! You can browse all available slots for CMA, CELPIP, and other exams.`, openPanel: 'exam-dates',
+    case 'exam_dates': return { content: `I'll open the live calendar! You can explore all available slots for CMA, CELPIP, and multiple other certification exams instantly.`, openPanel: 'exam-dates',
       actions: actions([['Book Exam', 'book_exam', ClipboardList], ['Mock Tests', 'mock_exams', BookOpen]]) };
-    case 'book_exam': return { content: `Let's book your exam. I'll open the booking form to get your details and preferred slot.`, openPanel: 'booking',
+    case 'book_exam': return { content: `Let's secure your seat. I'm opening our premium booking portal so you can select your preferred location and date right now.`, openPanel: 'booking',
       actions: actions([['Check Dates First', 'exam_dates', Calendar]]) };
-    case 'mock_exams': return { content: `We offer full real-condition mock tests! CMA, CELPIP, IELTS, and more. Opening the list now.`, openPanel: 'mock-exams',
+    case 'mock_exams': return { content: `We provide full-simulation mock tests under real exam conditions at our certified centres. I'll show you the full list.`, openPanel: 'mock-exams',
       actions: actions([['Book Exam', 'book_exam', ClipboardList]]) };
-    case 'contact': return { content: `We have state-of-the-art centres in Calicut and Kochi.\n📍 +91 9605686000\n\nI'll open the map and directions!`, openPanel: 'contact',
+    case 'contact': return { content: `Experience excellence at our state-of-the-art centres in **Calicut** and **Kochi**. \n\n📞 +91 9605686000\n📍 FETS, K7 Corporate Towers, Calicut\n\nWould you like me to open the centre location map for you?`, openPanel: 'contact',
       actions: actions([['Book Exam', 'book_exam', ClipboardList]]) };
-    case 'exam_info': return { content: `We are the premier testing partner in Kerala. We offer Prometric, Pearson VUE, CELPIP, CMA, IELTS and more.\n\nWant to check dates or book?`,
+    case 'exam_info': return { content: `As Kerala's premier testing partner, FETS provides secure, authorized environments for Prometric, Pearson VUE, IELTS and more.\n\nEverything from medical certifications to business exams. Want to see availability?`,
       actions: actions([['Check Dates', 'exam_dates', Calendar], ['Book', 'book_exam', ClipboardList]]) };
-    default: return { content: `I'm FETS AI, your exam assistant. I can help with dates, bookings, mocks, and locations. Try one of these:`,
+    default: return { content: `I'm FETS AI Assistant. I can help you find exam dates, manage bookings, or set up mock tests. Try one of these:`,
       actions: actions([['Check Exam Dates', 'exam_dates', Calendar], ['Book an Exam', 'book_exam', ClipboardList], ['Mock Tests', 'mock_exams', BookOpen]]) };
   }
 }
 
 const WELCOME = {
   id: 'w1', type: 'agent',
-  content: `Hi there! 👋 I'm **EXAM ASSIST**.\n\nLooking to book an exam, check dates, or take a mock test? I can get you sorted in seconds.`,
+  content: `Welcome to **FETS.in**. 👋 \n\nI'm your dedicated Assistant. Looking to check live availability, book a CMA mock, or enroll for an international certification? I can help you with anything.`,
   showActions: true,
 };
 
@@ -54,7 +53,7 @@ export default function AgentChatOverlay({ onClose, onOpenPanel }) {
       setMessages((prev) => [...prev, { id: `a-${Date.now()}`, type: 'agent', content: res.content, actions: res.actions, showActions: !!res.actions }]);
       setIsTyping(false);
       if (res.openPanel) onOpenPanel(res.openPanel);
-    }, 700);
+    }, 800);
   }, [onOpenPanel]);
 
   const handleSend = () => {
@@ -71,93 +70,143 @@ export default function AgentChatOverlay({ onClose, onOpenPanel }) {
   };
 
   return (
-    <div className="chat-overlay">
+    <div className="flex flex-col h-full bg-[#080808]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-light-300 bg-light-50 shadow-sm z-10" style={{borderColor: 'var(--color-light-300)'}}>
+      <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-[#0a0a0a] shadow-[0_4px_20px_rgba(0,0,0,0.4)] z-20">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-dark-950 flex items-center justify-center text-primary-400">
-            <Sparkles size={18} />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#FFD000] to-[#E6AC00] flex items-center justify-center text-dark-950 shadow-[0_0_15px_rgba(255,208,0,0.3)]">
+            <Bot size={22} strokeWidth={2.5} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-dark-950 tracking-wide">EXAM ASSIST</h3>
-            <p className="text-[10px] font-bold text-primary-500 uppercase tracking-widest">AI Agent Online</p>
+            <h3 className="text-sm font-black text-white tracking-tight">EXAM ASSIST</h3>
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Live Intelligence</p>
+            </div>
           </div>
         </div>
-        <button onClick={onClose} className="w-8 h-8 rounded-full bg-light-200 flex items-center justify-center text-dark-800 hover:bg-light-300 transition-colors border-none cursor-pointer">
-          <X size={16} />
+        <button onClick={onClose} className="w-10 h-10 rounded-xl hover:bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-all">
+          <X size={20} />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 bg-light-100 flex flex-col gap-4">
+      <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-8 custom-scrollbar">
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed ${
+          <div key={msg.id} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`flex items-center gap-2 mb-2 ${msg.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+               {msg.type === 'agent' ? (
+                 <div className="w-5 h-5 rounded-md bg-[#FFD000]/10 flex items-center justify-center text-[#FFD000]"><Bot size={12} /></div>
+               ) : (
+                 <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center text-white/40"><User size={12} /></div>
+               )}
+               <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">
+                 {msg.type === 'agent' ? 'Assistant' : 'Candidate'}
+               </span>
+            </div>
+            <div className={`max-w-[90%] rounded-2xl p-5 text-sm leading-relaxed shadow-lg ${
               msg.type === 'user' 
-                ? 'bg-primary-400 text-dark-950 rounded-tr-sm font-medium shadow-sm' 
-                : 'bg-light-50 text-dark-900 border border-light-300 rounded-tl-sm shadow-sm'
+                ? 'bg-[#FFD000] text-dark-950 font-bold border border-[#FFD000]/20 rounded-tr-sm transition-all hover:shadow-[0_8px_20px_rgba(255,208,0,0.2)]' 
+                : 'bg-white/5 text-white/80 border border-white/5 rounded-tl-sm shadow-inner'
             }`}>
               {msg.content.split('\n').map((l, i) => l === '' ? <div key={i} className="h-1"/> : (
                 <p key={i}>
-                  {l.split(/(\*\*[^*]+\*\*)/).map((p, j) => p.startsWith('**') ? <strong key={j} className="font-bold">{p.slice(2,-2)}</strong> : <span key={j}>{p}</span>)}
+                  {l.split(/(\*\*[^*]+\*\*)/).map((p, j) => p.startsWith('**') ? <strong key={j} className="font-black text-white">{p.slice(2,-2)}</strong> : <span key={j}>{p}</span>)}
                 </p>
               ))}
               
               {msg.type === 'agent' && msg.showActions && (
-                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-light-200">
-                  {msg.actions ? msg.actions.map((a, i) => (
-                    <button key={i} onClick={() => handleChip(a.intent, a.label)} className="text-xs font-semibold bg-light-200 hover:bg-primary-400 hover:text-dark-950 text-dark-800 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 border-none cursor-pointer">
-                      <a.icon size={12}/>{a.label}
-                    </button>
-                  )) : [
-                    { l: 'Check Dates', i: 'exam_dates', I: Calendar },
-                    { l: 'Book Exam', i: 'book_exam', I: ClipboardList },
-                    { l: 'Mocks', i: 'mock_exams', I: BookOpen },
-                  ].map((a, i) => (
-                    <button key={i} onClick={() => handleChip(a.i, a.l)} className="text-xs font-semibold bg-light-200 hover:bg-primary-400 hover:text-dark-950 text-dark-800 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 border-none cursor-pointer">
-                      <a.I size={12}/>{a.l}
-                    </button>
-                  ))}
+                <div className="space-y-2 mt-6 pt-6 border-t border-white/5">
+                  <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-3">Recommended Next Steps</p>
+                  <div className="flex flex-col gap-2">
+                    {msg.actions ? msg.actions.map((a, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => handleChip(a.intent, a.label)} 
+                        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 text-white/70 hover:bg-[#FFD000]/10 hover:border-[#FFD000]/30 hover:text-[#FFD000] transition-all group/chip cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <a.icon size={14}/>
+                          <span className="text-xs font-bold tracking-tight">{a.label}</span>
+                        </div>
+                        <ArrowRight size={14} className="opacity-0 group-hover/chip:opacity-100 group-hover/chip:translate-x-1 transition-all" />
+                      </button>
+                    )) : [
+                      { l: 'Check Exam Dates', i: 'exam_dates', I: Calendar },
+                      { l: 'Enroll for Booking', i: 'book_exam', I: ClipboardList },
+                      { l: 'Browse Mock Exams', i: 'mock_exams', I: BookOpen },
+                    ].map((a, i) => (
+                      <button 
+                        key={i} 
+                        onClick={() => handleChip(a.i, a.l)} 
+                        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 text-white/70 hover:bg-[#FFD000]/10 hover:border-[#FFD000]/30 hover:text-[#FFD000] transition-all group/chip cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <a.I size={14}/>
+                          <span className="text-xs font-bold tracking-tight">{a.l}</span>
+                        </div>
+                        <ArrowRight size={14} className="opacity-0 group-hover/chip:opacity-100 group-hover/chip:translate-x-1 transition-all" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           </div>
         ))}
         {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-light-50 border border-light-300 rounded-2xl rounded-tl-sm p-4 flex gap-1 shadow-sm">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-bounce"/>
-              <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-bounce" style={{animationDelay: '0.1s'}}/>
-              <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-bounce" style={{animationDelay: '0.2s'}}/>
+          <div className="flex flex-col items-start gap-2">
+            <div className="w-5 h-5 rounded-md bg-[#FFD000]/10 flex items-center justify-center text-[#FFD000]"><Bot size={12} /></div>
+            <div className="bg-white/5 border border-white/5 rounded-2xl rounded-tl-sm p-4 flex gap-1.5 shadow-inner">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FFD000] animate-bounce"/>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FFD000] animate-bounce" style={{animationDelay: '0.1s'}}/>
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FFD000] animate-bounce" style={{animationDelay: '0.2s'}}/>
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
+        <div ref={bottomRef} className="h-4" />
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-light-50 border-t border-light-300">
-        <div className="flex items-center gap-2 bg-light-100 rounded-xl border border-light-200 p-1 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-400/20 transition-all">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
-            placeholder="Ask me anything..."
-            disabled={isTyping}
-            className="flex-1 bg-transparent border-none text-sm px-3 py-2 outline-none text-dark-900 placeholder:text-dark-900/40"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className={`w-9 h-9 flex items-center justify-center rounded-lg border-none cursor-pointer transition-all ${
-              input.trim() && !isTyping ? 'bg-primary-400 text-dark-950 hover:bg-primary-500' : 'bg-light-200 text-dark-900/40'
-            }`}
-          >
-            <Send size={16} />
-          </button>
+      <div className="p-6 bg-[#0a0a0a] border-t border-white/5">
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-tr from-[#FFD000] to-[#E6AC00] rounded-2xl opacity-0 group-focus-within:opacity-20 transition-all duration-500" />
+          <div className="relative flex items-center gap-2 bg-black rounded-2xl border border-white/10 p-2 focus-within:border-[#FFD000]/40 transition-all shadow-inner">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
+              placeholder="How can I assist you today?"
+              disabled={isTyping}
+              className="flex-1 bg-transparent border-none text-[13px] font-medium px-4 py-3 outline-none text-white placeholder:text-white/20"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isTyping}
+              className={`w-11 h-11 flex items-center justify-center rounded-xl border-none cursor-pointer transition-all ${
+                input.trim() && !isTyping ? 'bg-[#FFD000] text-dark-950 hover:bg-[#ffe44d] shadow-[0_0_15px_rgba(255,208,0,0.3)]' : 'bg-white/5 text-white/20'
+              }`}
+            >
+              <Send size={18} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
+        <p className="text-[10px] text-white/10 text-center font-bold uppercase tracking-[0.3em] mt-4">Powered by FETS-AI Engine</p>
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 208, 0, 0.2);
+        }
+      `}</style>
     </div>
   );
 }
