@@ -10,8 +10,8 @@ export default function HeroSection({ onOpenChat }) {
   return (
     <section id="top" className="relative overflow-hidden bg-light-100 pt-20 md:pt-24">
       <div className="pointer-events-none absolute top-10 left-1/4 h-72 w-72 rounded-full bg-[#FFD150]/20 blur-[80px] mix-blend-multiply animate-blob md:h-[500px] md:w-[500px]" />
-      <div className="pointer-events-none absolute top-1/4 right-1/4 h-72 w-72 rounded-full bg-[#458B73]/15 blur-[80px] mix-blend-multiply animation-delay-2000 animate-blob md:h-[400px] md:w-[400px]" />
-      <div className="pointer-events-none absolute -bottom-8 left-1/3 h-80 w-80 rounded-full bg-[#F26076]/10 blur-[80px] mix-blend-multiply animation-delay-4000 animate-blob md:h-[600px] md:w-[600px]" />
+      <div className="pointer-events-none absolute top-1/4 right-1/4 h-72 w-72 rounded-full bg-[#E6AC00]/15 blur-[80px] mix-blend-multiply animation-delay-2000 animate-blob md:h-[400px] md:w-[400px]" />
+      <div className="pointer-events-none absolute -bottom-8 left-1/3 h-80 w-80 rounded-full bg-[#CC9900]/10 blur-[80px] mix-blend-multiply animation-delay-4000 animate-blob md:h-[600px] md:w-[600px]" />
 
       <div className="container-custom relative z-10 mx-auto flex max-w-5xl flex-col items-center py-16 text-center md:py-20">
         <motion.div variants={fade} initial="hidden" animate="show" className="mb-10 inline-flex items-center gap-2 rounded-full border border-light-300 bg-white/80 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-dark-800 shadow-sm backdrop-blur-md">

@@ -9,7 +9,7 @@ const NAV = [
   { href: '#early-access', label: 'Updates' },
 ];
 
-export default function SiteHeader({ onOpenCalicut, onOpenKochi }) {
+export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
   const [open, setOpen] = useState(false);
 
   const close = () => setOpen(false);
@@ -37,30 +37,59 @@ export default function SiteHeader({ onOpenCalicut, onOpenKochi }) {
             </a>
           </div>
 
-          <nav className="hidden flex-wrap items-center justify-center gap-2 font-semibold text-sm md:flex lg:gap-3" aria-label="Primary">
-            <button type="button" onClick={() => { onOpenCalicut(); }} className="btn-nav gap-1">
-              <MapPin size={14} /> Calicut
-            </button>
-            <button type="button" onClick={() => { onOpenKochi(); }} className="btn-nav gap-1">
-              <MapPin size={14} /> Kochi
-            </button>
-            {NAV.map((item) => (
-              <a key={item.href} href={item.href} className="btn-nav">
-                {item.label}
+          <nav className="hidden flex-wrap items-center justify-between font-semibold text-sm w-full ml-6 lg:flex" aria-label="Primary">
+            {/* Left: Locations */}
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { onOpenCalicut(); }} className="btn-nav text-[16px] h-12 px-6 shadow-sm gap-2">
+                <MapPin size={18} /> Calicut
+              </button>
+              <button type="button" onClick={() => { onOpenKochi(); }} className="btn-nav text-[16px] h-12 px-6 shadow-sm gap-2">
+                <MapPin size={18} /> Kochi
+              </button>
+            </div>
+
+            {/* Middle: Links */}
+            <div className="flex gap-4">
+              <a href="#calendar" className="btn-nav text-[16px] h-12 px-6 shadow-sm bg-transparent border-0 hover:bg-light-200 shadow-none">
+                Check Availability
               </a>
-            ))}
-            <a href="tel:+919605686000" className="btn-nav gap-1 lg:ml-auto">
-              <Phone size={14} /> +91 9605686000
-            </a>
+              <a href="#early-access" className="btn-nav text-[16px] h-12 px-6 shadow-sm bg-transparent border-0 hover:bg-light-200 shadow-none">
+                Early Access
+              </a>
+            </div>
+
+            {/* Right: Mock Exam & AI/Contact Icons */}
+            <div className="flex items-center gap-4">
+              <a href="#mock-exams" className="btn-nav text-[16px] h-12 px-6 shadow-sm !bg-dark-900 !text-[#FFD000] hover:!bg-dark-800 border-0">
+                Mock Exams
+              </a>
+              <div className="flex gap-2">
+                <button type="button" className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-400 text-dark-950 shadow-sm transition-transform hover:scale-105" onClick={() => onOpenChat()}>
+                  <Sparkles size={20} />
+                </button>
+                <a href="tel:+919605686000" className="flex h-12 w-12 items-center justify-center rounded-xl bg-light-300 text-dark-950 transition-colors hover:bg-light-400">
+                  <Phone size={20} />
+                </a>
+              </div>
+            </div>
           </nav>
 
-          <a
-            href="tel:+919605686000"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-light-300 bg-white text-dark-900 md:hidden"
-            aria-label="Call FETS"
-          >
-            <Phone size={20} />
-          </a>
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => onOpenChat()}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-400 text-dark-900"
+            >
+              <Sparkles size={20} />
+            </button>
+            <a
+              href="tel:+919605686000"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-light-300 bg-white text-dark-900"
+              aria-label="Call FETS"
+            >
+              <Phone size={20} />
+            </a>
+          </div>
         </div>
       </header>
 
