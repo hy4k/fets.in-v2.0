@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, MapPin, Phone } from 'lucide-react';
+import { Menu, X, MapPin, Phone, Sparkles } from 'lucide-react';
 
 const NAV = [
   { href: '#mock-exams', label: 'Mock exams' },

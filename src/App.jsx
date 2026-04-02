@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MapPin, Phone, Sparkles, X } from 'lucide-react';
+import { MapPin, Phone, Sparkles, X, Mail, Navigation, ArrowRight } from 'lucide-react';
 import AgentChatOverlay from './components/AgentChatOverlay';
 import CMAMockBookingModal from './components/CMAMockBookingModal';
 import AdminSlotsUpload from './components/AdminSlotsUpload';
