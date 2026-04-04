@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   X, Upload, FileSpreadsheet, CheckCircle, AlertCircle,
   Loader2, Eye, EyeOff, Trash2, Table2, RefreshCw, Save,
@@ -1154,11 +1154,35 @@ function InstitutesTab() {
 
 // ─── Results Tab ─────────────────────────────────────────────────────────────
 
+function parseDate(v) {
+  if (!v) return null;
+  const s = String(v).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (s.includes('/')) {
+    const p = s.split('/');
+    return p[0].length === 4
+      ? `${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`
+      : `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+  }
+  const d = new Date(s);
+  return isNaN(d) ? null : d.toISOString().split('T')[0];
+}
+
 function ResultsTab() {
-  const [results, setResults]   = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [filter, setFilter]     = useState('all');
-  const [search, setSearch]     = useState('');
+  const [results, setResults]     = useState([]);
+  const [loading, setLoading]     = useState(false);
+  const [filter, setFilter]       = useState('all');
+  const [search, setSearch]       = useState('');
+
+  // Upload state
+  const [centers, setCenters]     = useState([]);
+  const [selectedCenter, setSelectedCenter] = useState('');
+  const [parsedRows, setParsedRows] = useState([]);
+  const [parseErr, setParseErr]   = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const fileRef = useRef(null);
 
   const fetchResults = useCallback(async () => {
     if (!supabase) return;
@@ -1171,7 +1195,64 @@ function ResultsTab() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchResults(); }, [fetchResults]);
+  const fetchCenters = useCallback(async () => {
+    if (!supabase) return;
+    const { data } = await supabase.from('coaching_centers').select('id, name, city').eq('is_active', true).order('name');
+    setCenters(data || []);
+  }, []);
+
+  useEffect(() => { fetchResults(); fetchCenters(); }, [fetchResults, fetchCenters]);
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setParseErr(''); setParsedRows([]);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const data = rows.slice(1).filter(r => r[0]).map(r => ({
+          student_name: String(r[0] || '').trim(),
+          exam_part:    String(r[1] || '').trim() || null,
+          exam_date:    parseDate(r[2]),
+          score:        r[3] !== undefined && r[3] !== '' ? parseFloat(r[3]) : null,
+          result_status: String(r[4] || '').toLowerCase().includes('pass') ? 'pass'
+            : String(r[4] || '').toLowerCase().includes('fail') ? 'fail' : 'pending',
+        }));
+        if (!data.length) { setParseErr('No valid rows found. Check format.'); return; }
+        setParsedRows(data);
+      } catch (err) { setParseErr('Failed to parse: ' + err.message); }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Student Name', 'CMA Part', 'Exam Date', 'Score', 'Result'],
+      ['John Doe', 'Part 1', '2026-04-10', '72', 'Pass'],
+      ['Jane Smith', 'Part 2', '2026-04-10', '55', 'Fail'],
+    ]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 10 }, { wch: 14 }, { wch: 8 }, { wch: 10 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Results');
+    XLSX.writeFile(wb, 'FETS_Results_Template.xlsx');
+  };
+
+  const handleUpload = async () => {
+    if (!selectedCenter) { setUploadMsg({ ok: false, msg: 'Select an institute first.' }); return; }
+    if (!parsedRows.length) { setUploadMsg({ ok: false, msg: 'Parse an Excel file first.' }); return; }
+    setUploading(true); setUploadMsg(null);
+    try {
+      const rows = parsedRows.map(r => ({ ...r, coaching_center_id: selectedCenter }));
+      const { error } = await supabase.from('exam_results').insert(rows);
+      if (error) throw error;
+      setUploadMsg({ ok: true, msg: `${rows.length} results published. Institute dashboard updated.` });
+      setParsedRows([]); if (fileRef.current) fileRef.current.value = '';
+      fetchResults();
+    } catch (err) { setUploadMsg({ ok: false, msg: err.message || 'Upload failed.' }); }
+    finally { setUploading(false); }
+  };
 
   const filtered = results.filter(r => {
     const matchStatus = filter === 'all' || r.result_status === filter;
@@ -1183,68 +1264,123 @@ function ResultsTab() {
     return matchStatus && matchSearch;
   });
 
-  const exportCSV = () => {
-    const header = ['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result', 'Institute', 'City', 'Uploaded At'];
+  const doExportCSV = () => {
+    const header = ['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result', 'Institute', 'City', 'Published At'];
     const rows = filtered.map(r => [
-      r.student_name,
-      r.exam_part || '',
-      r.exam_date || '',
-      r.score ?? '',
-      r.result_status,
-      r.coaching_centers?.name || '',
-      r.coaching_centers?.city || '',
+      r.student_name, r.exam_part || '', r.exam_date || '', r.score ?? '',
+      r.result_status, r.coaching_centers?.name || '', r.coaching_centers?.city || '',
       r.uploaded_at ? new Date(r.uploaded_at).toLocaleString('en-IN') : '',
     ]);
     const csv = [header, ...rows].map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-    a.download = `FETS_Results_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `FETS_Results_${new Date().toISOString().split('T')[0]}.csv`;
+    a.style.display = 'none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   const statusBadge = (s) => {
-    if (s === 'pass')    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">PASS</span>;
-    if (s === 'fail')    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700">FAIL</span>;
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-600">PENDING</span>;
+    if (s === 'pass') return <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">PASS</span>;
+    if (s === 'fail') return <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700">FAIL</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-500">PENDING</span>;
   };
 
   return (
-    <div className="space-y-4">
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search student, institute, exam part…"
-          className="input-clean flex-1 min-w-[200px] text-sm"
-        />
-        <div className="flex gap-1 bg-light-100 rounded-lg p-1">
-          {['all', 'pass', 'fail', 'pending'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded text-xs font-bold capitalize transition-all ${
-                filter === f ? 'bg-dark-950 text-white shadow-sm' : 'text-dark-700 hover:text-dark-950'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-5">
+
+      {/* ── Upload section ── */}
+      <div className="rounded-xl border border-light-200 overflow-hidden">
         <button
-          onClick={exportCSV}
-          disabled={!filtered.length}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-950 text-white text-xs font-bold hover:bg-dark-900 transition-all disabled:opacity-40"
+          onClick={() => setShowUpload(!showUpload)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-dark-950 text-white hover:bg-dark-900 transition-colors"
         >
-          <Download size={13}/> Export CSV
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <Upload size={14} className="text-primary-400"/> Publish Results to Institutes
+          </div>
+          <ChevronDown size={14} className={`transition-transform text-white/40 ${showUpload ? 'rotate-180' : ''}`}/>
         </button>
-        <button onClick={fetchResults} className="p-2 text-dark-600 hover:text-dark-950 transition-colors">
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>
-        </button>
+
+        {showUpload && (
+          <div className="p-4 bg-light-50 space-y-4">
+            {/* Template download */}
+            <div className="flex items-center justify-between rounded-lg border border-light-200 bg-white px-4 py-3">
+              <div>
+                <p className="text-xs font-bold text-dark-950 mb-0.5">Excel Format: Student Name · CMA Part · Exam Date · Score · Result (Pass/Fail)</p>
+                <p className="text-[11px] text-dark-600">Download template for the correct column order</p>
+              </div>
+              <button onClick={downloadTemplate} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800 shrink-0">
+                <Download size={12}/> Template
+              </button>
+            </div>
+
+            {/* Institute selector */}
+            <div>
+              <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Select Institute *</label>
+              <select
+                value={selectedCenter}
+                onChange={e => setSelectedCenter(e.target.value)}
+                className="input-clean text-sm w-full"
+              >
+                <option value="">— Choose institute —</option>
+                {centers.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.city ? ` (${c.city})` : ''}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* File upload */}
+            <div>
+              <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Upload Excel File *</label>
+              <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="input-clean text-sm w-full cursor-pointer" />
+            </div>
+
+            {parseErr && <p className="text-red-600 text-xs font-medium">{parseErr}</p>}
+
+            {/* Preview */}
+            {parsedRows.length > 0 && (
+              <div className="rounded-lg border border-light-200 overflow-hidden">
+                <div className="px-3 py-2 bg-emerald-50 border-b border-light-200 flex items-center justify-between">
+                  <p className="text-xs font-bold text-emerald-700">{parsedRows.length} rows ready to publish</p>
+                  <span className="text-[10px] text-dark-600">Preview (first 5)</span>
+                </div>
+                <table className="w-full text-xs">
+                  <thead className="bg-light-100">
+                    <tr>{['Student Name','Part','Date','Score','Result'].map(h => <th key={h} className="px-3 py-2 text-left font-bold text-dark-700">{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {parsedRows.slice(0,5).map((r,i) => (
+                      <tr key={i} className="border-t border-light-100">
+                        <td className="px-3 py-1.5 font-medium text-dark-950">{r.student_name}</td>
+                        <td className="px-3 py-1.5 text-dark-700">{r.exam_part || '—'}</td>
+                        <td className="px-3 py-1.5 text-dark-700">{r.exam_date || '—'}</td>
+                        <td className="px-3 py-1.5 text-dark-700">{r.score ?? '—'}</td>
+                        <td className="px-3 py-1.5">{statusBadge(r.result_status)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {uploadMsg && (
+              <div className={`rounded-lg px-4 py-3 text-sm font-semibold ${uploadMsg.ok ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {uploadMsg.msg}
+              </div>
+            )}
+
+            <button
+              onClick={handleUpload}
+              disabled={uploading || !parsedRows.length || !selectedCenter}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-dark-950 text-white text-sm font-bold hover:bg-dark-800 disabled:opacity-40 transition-all"
+            >
+              {uploading ? <Loader2 size={14} className="animate-spin"/> : <Upload size={14}/>}
+              {uploading ? 'Publishing…' : `Publish ${parsedRows.length || ''} Results to Institute Dashboard`}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Stats row */}
+      {/* ── Stats ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Total', value: results.length, color: 'bg-blue-50 text-blue-700' },
@@ -1258,36 +1394,57 @@ function ResultsTab() {
         ))}
       </div>
 
-      {/* Table */}
+      {/* ── Filters ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search student, institute, exam part…" className="input-clean flex-1 min-w-[200px] text-sm" />
+        <div className="flex gap-1 bg-light-100 rounded-lg p-1">
+          {['all', 'pass', 'fail', 'pending'].map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded text-xs font-bold capitalize transition-all ${filter === f ? 'bg-dark-950 text-white shadow-sm' : 'text-dark-700 hover:text-dark-950'}`}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <button onClick={doExportCSV} disabled={!filtered.length}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-950 text-white text-xs font-bold hover:bg-dark-900 disabled:opacity-40">
+          <Download size={13}/> Export CSV
+        </button>
+        <button onClick={fetchResults} className="p-2 text-dark-600 hover:text-dark-950">
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>
+        </button>
+      </div>
+
+      {/* ── Table ── */}
       {loading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-dark-600"/></div>
+        <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-dark-600"/></div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-dark-600 text-sm">
-          {results.length === 0 ? 'No results uploaded yet. Institutes can upload results from their dashboard.' : 'No results match your filters.'}
+          {results.length === 0 ? 'No results published yet. Use the upload section above.' : 'No results match your filters.'}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-light-200">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-light-100 border-b border-light-200">
-                {['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result', 'Institute', 'Uploaded'].map(h => (
+                {['Student Name','Exam Part','Exam Date','Score','Result','Institute','Published'].map(h => (
                   <th key={h} className="px-3 py-2.5 text-left text-[11px] font-black text-dark-700 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-light-100">
-              {filtered.map((r) => (
-                <tr key={r.id} className="hover:bg-light-50 transition-colors">
+              {filtered.map(r => (
+                <tr key={r.id} className="hover:bg-light-50">
                   <td className="px-3 py-2.5 font-semibold text-dark-950 whitespace-nowrap">{r.student_name}</td>
                   <td className="px-3 py-2.5 text-dark-700">{r.exam_part || '—'}</td>
-                  <td className="px-3 py-2.5 text-dark-700 whitespace-nowrap">{r.exam_date ? new Date(r.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                  <td className="px-3 py-2.5 text-dark-700 whitespace-nowrap">{r.exam_date ? new Date(r.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—'}</td>
                   <td className="px-3 py-2.5 text-dark-700 text-center font-mono">{r.score ?? '—'}</td>
                   <td className="px-3 py-2.5">{statusBadge(r.result_status)}</td>
                   <td className="px-3 py-2.5 text-dark-700">
                     <span className="font-medium">{r.coaching_centers?.name || '—'}</span>
                     {r.coaching_centers?.city && <span className="text-dark-500 text-xs ml-1">({r.coaching_centers.city})</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-dark-500 text-xs whitespace-nowrap">{r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'}</td>
+                  <td className="px-3 py-2.5 text-dark-500 text-xs whitespace-nowrap">{r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : '—'}</td>
                 </tr>
               ))}
             </tbody>

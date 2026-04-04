@@ -696,7 +696,6 @@ function DashboardScreen({ center, onSignOut }) {
   const [loadingStudents, setLoadingStudents] = useState({});
   const [results, setResults] = useState([]);
   const [showBulkBooking, setShowBulkBooking] = useState(false);
-  const [showResultsUpload, setShowResultsUpload] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!center?.id) return;
@@ -831,53 +830,55 @@ function DashboardScreen({ center, onSignOut }) {
           </div>
         )}
 
-        {/* Results section */}
-        {results.length > 0 && (
-          <div className="mt-12">
-            <div className="mb-5 flex items-center justify-between">
+        {/* Results section — populated by FETS admin */}
+        <div className="mt-12">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
               <h2 className="text-xl font-black text-white tracking-tight">Exam Results</h2>
-              <span className="text-xs text-white/30 font-bold">{results.length} records</span>
+              <p className="text-white/30 text-xs mt-1 font-medium">Results are published here by FETS after exams are evaluated.</p>
             </div>
+            {results.length > 0 && <span className="text-xs text-white/30 font-bold">{results.length} records</span>}
+          </div>
+
+          {results.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-white/[0.08] py-16 text-center">
+              <Trophy size={32} className="mx-auto text-white/10 mb-3" />
+              <p className="text-white/25 font-bold text-sm uppercase tracking-wider">No results yet</p>
+              <p className="text-white/15 text-xs mt-2 max-w-xs mx-auto">Results will appear here once FETS publishes them for your students.</p>
+            </div>
+          ) : (
             <div className="rounded-3xl border border-white/[0.06] overflow-hidden">
-              <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_0.8fr_1fr] gap-4 px-5 py-3 border-b border-white/[0.04] bg-white/[0.02]">
-                {['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result'].map(h => (
+              {/* Column headers */}
+              <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_0.8fr_1fr_1.2fr] gap-4 px-5 py-3 border-b border-white/[0.04] bg-white/[0.02]">
+                {['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result', 'Booking Date'].map(h => (
                   <span key={h} className="text-[10px] font-black text-white/30 uppercase tracking-widest">{h}</span>
                 ))}
               </div>
               {results.map((r, i) => (
-                <div key={r.id} className={`grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_0.8fr_1fr] gap-4 px-5 py-3.5 items-center ${i % 2 === 0 ? 'bg-white/[0.01]' : ''}`}>
+                <div key={r.id} className={`grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_0.8fr_1fr_1.2fr] gap-4 px-5 py-4 items-center border-b border-white/[0.03] last:border-0 ${i % 2 === 0 ? 'bg-white/[0.01]' : ''}`}>
                   <span className="font-semibold text-white text-sm">{r.student_name}</span>
                   <span className="text-white/60 text-sm">{r.exam_part || '—'}</span>
                   <span className="text-white/50 text-sm">{r.exam_date ? new Date(r.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</span>
-                  <span className="text-white/70 text-sm font-bold">{r.score != null ? r.score : '—'}</span>
+                  <span className="text-white/70 text-sm font-bold font-mono">{r.score != null ? r.score : '—'}</span>
                   <ResultBadge value={r.result_status} />
+                  <span className="text-white/30 text-xs">{r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}</span>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Action CTAs */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-3xl border border-[#FFD000]/10 bg-[#FFD000]/[0.03] p-8 flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FFD000]/10 flex items-center justify-center text-[#FFD000]"><Users size={22} /></div>
-            <div>
+        {/* Action CTA — single card for bulk booking only */}
+        <div className="mt-12">
+          <div className="rounded-3xl border border-[#FFD000]/10 bg-[#FFD000]/[0.03] p-8 flex flex-col md:flex-row md:items-center gap-6">
+            <div className="w-12 h-12 rounded-2xl bg-[#FFD000]/10 flex items-center justify-center text-[#FFD000] shrink-0"><Users size={22} /></div>
+            <div className="flex-1">
               <h3 className="text-xl font-black text-white mb-1 tracking-tight">Bulk Mock Booking</h3>
               <p className="text-white/40 text-sm leading-relaxed">Book a CMA mock exam for multiple students. Upload an Excel roster or enter names manually.</p>
             </div>
             <button onClick={() => setShowBulkBooking(true)}
-              className="mt-auto px-6 py-3.5 rounded-2xl bg-[#FFD000] text-[#0a0a0a] font-black text-sm uppercase tracking-widest hover:bg-[#ffe44d] transition-all shadow-[0_8px_24px_rgba(255,208,0,0.15)]"
+              className="shrink-0 px-7 py-3.5 rounded-2xl bg-[#FFD000] text-[#0a0a0a] font-black text-sm uppercase tracking-widest hover:bg-[#ffe44d] transition-all shadow-[0_8px_24px_rgba(255,208,0,0.15)]"
             >Book for Students →</button>
-          </div>
-          <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-8 flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400"><Upload size={22} /></div>
-            <div>
-              <h3 className="text-xl font-black text-white mb-1 tracking-tight">Upload Results</h3>
-              <p className="text-white/40 text-sm leading-relaxed">Upload your students' exam results. They'll appear here and in the FETS admin dashboard.</p>
-            </div>
-            <button onClick={() => setShowResultsUpload(true)}
-              className="mt-auto px-6 py-3.5 rounded-2xl border border-white/[0.1] bg-white/[0.04] text-white font-black text-sm uppercase tracking-widest hover:bg-white/[0.08] transition-all"
-            >Upload Results →</button>
           </div>
         </div>
       </main>
@@ -885,11 +886,6 @@ function DashboardScreen({ center, onSignOut }) {
       {showBulkBooking && (
         <BulkBookingModal center={center} onClose={() => setShowBulkBooking(false)}
           onSuccess={() => { setShowBulkBooking(false); fetchData(); }} />
-      )}
-      {showResultsUpload && (
-        <ResultsUploadModal center={center} bookings={bookings}
-          onClose={() => setShowResultsUpload(false)}
-          onSuccess={() => { setShowResultsUpload(false); fetchResults(); }} />
       )}
     </div>
   );
