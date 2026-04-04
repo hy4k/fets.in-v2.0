@@ -71,12 +71,15 @@ export default function EarlyAccessSection({ showToast, onSignupSuccess }) {
 
           {/* Left: copy */}
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-4">Candidate Registration</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal mb-6">
-              Create your<br />FETS account
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-4">Early Access</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal mb-3 leading-tight">
+              First in line.<br />Every time.
             </h2>
+            <p className="text-lg text-white/40 font-semibold mb-8 tracking-normal">
+              Register once. Get notified first.
+            </p>
             <p className="mb-8 leading-relaxed text-white/55">
-              Register to get priority access to exam dates, mock test bookings, exclusive early-bird discounts, and your personal candidate dashboard.
+              Create your free FETS candidate account and get priority access to exam dates the moment they open — before the general public. Especially powerful for CMA US and CELPIP aspirants where seats fill fast.
             </p>
             <ul className="mb-8 space-y-3">
               {[
@@ -111,7 +114,7 @@ export default function EarlyAccessSection({ showToast, onSignupSuccess }) {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white">Create account</h3>
-                    <p className="text-sm text-white/40">No verification required</p>
+                    <p className="text-sm text-white/40">Free · No email verification needed</p>
                   </div>
                 </div>
 
