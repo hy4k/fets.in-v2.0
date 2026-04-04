@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Phone, X, Mail, Navigation, ArrowRight } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import AgentChatOverlay from './components/AgentChatOverlay';
 import CMAMockBookingModal from './components/CMAMockBookingModal';
 import AdminSlotsUpload from './components/AdminSlotsUpload';
 import ChatPanels from './components/ChatPanels';
+import LoginModal from './components/LoginModal';
+import CandidateDashboard from './pages/CandidateDashboard';
 import SiteHeader from './components/sections/SiteHeader';
 import HeroSection from './components/sections/HeroSection';
 import MockExamsSection from './components/sections/MockExamsSection';
-import CalendarSection from './components/sections/CalendarSection';
-import StudentResourcesSection from './components/sections/StudentResourcesSection';
-import FAQSection from './components/sections/FAQSection';
 import EarlyAccessSection from './components/sections/EarlyAccessSection';
+import FAQSection from './components/sections/FAQSection';
 import SiteFooter from './components/sections/SiteFooter';
 
 export default function App() {
@@ -24,11 +25,29 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [adminClicks, setAdminClicks] = useState(0);
 
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+
   // URL-based access: ?admin=true opens admin panel, ?book=cma opens booking
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true') setShowAdminUpload(true);
     if (params.get('book') === 'cma') setIsCMABookingOpen(true);
+  }, []);
+
+  // Auth session
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (!session?.user) setShowDashboard(false);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -57,9 +76,32 @@ export default function App() {
     setActivePanel('booking');
   };
 
+  const handleLogin = (loggedInUser) => {
+    setUser(loggedInUser);
+    setShowLoginModal(false);
+    setShowDashboard(true);
+  };
+
+  const handleSignupSuccess = (newUser) => {
+    setUser(newUser);
+    setShowDashboard(true);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setShowDashboard(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-white">
-      <SiteHeader onOpenChat={() => setIsChatOpen(true)} onOpenCalicut={() => setActiveLocationModal('calicut')} onOpenKochi={() => setActiveLocationModal('kochi')} />
+      <SiteHeader
+        onOpenChat={() => setIsChatOpen(true)}
+        onOpenCalicut={() => setActiveLocationModal('calicut')}
+        onOpenKochi={() => setActiveLocationModal('kochi')}
+        onOpenLogin={() => setShowLoginModal(true)}
+        onOpenDashboard={() => setShowDashboard(true)}
+        user={user}
+      />
 
       <main>
         <HeroSection onOpenChat={() => setIsChatOpen(true)} />
@@ -67,10 +109,8 @@ export default function App() {
           onBookCma={() => setIsCMABookingOpen(true)}
           onBookOther={() => showToast('Call +91 9605686000 or use the calendar to book this exam.')}
         />
-        <CalendarSection />
-        <StudentResourcesSection />
+        <EarlyAccessSection showToast={showToast} onSignupSuccess={handleSignupSuccess} />
         <FAQSection />
-        <EarlyAccessSection showToast={showToast} />
       </main>
 
       <SiteFooter onOpenCalicut={() => setActiveLocationModal('calicut')} onOpenKochi={() => setActiveLocationModal('kochi')} />
@@ -78,6 +118,21 @@ export default function App() {
       <CMAMockBookingModal isOpen={isCMABookingOpen} onClose={() => setIsCMABookingOpen(false)} showToast={showToast} />
 
       {showAdminUpload && <AdminSlotsUpload onClose={() => setShowAdminUpload(false)} />}
+
+      {/* Auth modals */}
+      {showLoginModal && (
+        <LoginModal onClose={() => setShowLoginModal(false)} onLogin={handleLogin} />
+      )}
+
+      {/* Candidate dashboard overlay */}
+      {showDashboard && user && (
+        <CandidateDashboard
+          user={user}
+          onClose={() => setShowDashboard(false)}
+          onLogout={handleLogout}
+          onOpenChat={() => { setShowDashboard(false); setIsChatOpen(true); }}
+        />
+      )}
 
       {toast && (
         <div
@@ -177,7 +232,7 @@ function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi 
                     <label className="label-premium">Testing Venue Address</label>
                     <p className="text-white text-lg font-bold leading-relaxed tracking-tight" dangerouslySetInnerHTML={{ __html: address }} />
                  </div>
-                 
+
                  <div className="flex flex-wrap gap-4">
                     <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/5 flex items-center gap-3 shadow-inner">
                        <Phone size={16} className="text-[#FFD000]" />
@@ -203,7 +258,7 @@ function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi 
                     {Object.entries(reach).map(([key, val]) => (
                       <li key={key} className="flex gap-4">
                          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
-                            {key === 'train' ? <Train size={14} className="text-orange-400" /> : 
+                            {key === 'train' ? <Train size={14} className="text-orange-400" /> :
                              key === 'metro' ? <Navigation size={14} className="text-blue-400" /> :
                              key === 'bus' ? <Bus size={14} className="text-emerald-400" /> :
                              <Plane size={14} className="text-[#FFD000]" />}
@@ -228,18 +283,7 @@ function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi 
 }
 
 const Train = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect width="16" height="15" x="4" y="3" rx="2" />
     <path d="M4 11h16" />
     <path d="M12 3v8" />
@@ -251,36 +295,14 @@ const Train = ({ size, className }) => (
 );
 
 const Compass = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <circle cx="12" cy="12" r="10" />
     <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
   </svg>
 );
 
 const Bus = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect width="16" height="12" x="4" y="3" rx="2" />
     <path d="M4 11h16" />
     <path d="M8 3v8" />
@@ -293,18 +315,7 @@ const Bus = ({ size, className }) => (
 );
 
 const Plane = ({ size, className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.7 5.2c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z" />
   </svg>
 );

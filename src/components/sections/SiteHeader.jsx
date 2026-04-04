@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { Menu, X, MapPin, Phone } from 'lucide-react';
+import { Menu, X, MapPin, Phone, LogIn } from 'lucide-react';
 
 const NAV_MOBILE = [
   { href: '#mock-exams', label: 'Exam Test Drive' },
-  { href: '#calendar', label: 'Calendar' },
-  { href: '#student-resources', label: 'Student resources' },
   { href: '#faq', label: 'FAQ' },
-  { href: '#early-access', label: 'Early Access' },
+  { href: '#register', label: 'Register' },
 ];
 
 function AiWaveIcon({ size = 20 }) {
@@ -21,9 +19,11 @@ function AiWaveIcon({ size = 20 }) {
   );
 }
 
-export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
+export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onOpenLogin, user, onOpenDashboard }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || null;
 
   return (
     <>
@@ -36,7 +36,7 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-white/[0.08] bg-[#0a0a0a]/95 backdrop-blur-md">
         <div className="container-custom flex h-16 md:h-20 items-center justify-between gap-3">
 
-          {/* Logo — just "TS" wordmark */}
+          {/* Mobile hamburger */}
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
@@ -47,17 +47,10 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
             >
               <Menu size={20} strokeWidth={2} />
             </button>
-            <a
-              href="#top"
-              className="font-black tracking-tight text-white text-lg leading-none"
-              onClick={close}
-            >
-              TS
-            </a>
           </div>
 
           {/* Desktop nav */}
-          <nav className="hidden flex-wrap items-center justify-between w-full ml-8 lg:flex" aria-label="Primary">
+          <nav className="hidden flex-wrap items-center justify-between w-full lg:flex" aria-label="Primary">
 
             {/* Left: Locations */}
             <div className="flex gap-2">
@@ -77,13 +70,13 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
               </button>
             </div>
 
-            {/* Centre: Early Access + Exam Test Drive */}
+            {/* Centre: Register + Exam Test Drive */}
             <div className="flex gap-2">
               <a
-                href="#early-access"
+                href="#register"
                 className="inline-flex items-center h-10 px-4 rounded-lg text-white/60 text-sm font-semibold hover:text-white hover:bg-white/5 transition-all"
               >
-                Early Access
+                Register
               </a>
               <a
                 href="#mock-exams"
@@ -93,7 +86,7 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
               </a>
             </div>
 
-            {/* Right: AI + Phone */}
+            {/* Right: AI + Login/User + Phone */}
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -104,6 +97,28 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
                 <AiWaveIcon size={18} />
                 <span className="text-[12px] font-black uppercase tracking-widest text-[#FFD000]">Exam AI</span>
               </button>
+
+              {user ? (
+                <button
+                  type="button"
+                  onClick={onOpenDashboard}
+                  className="flex h-10 items-center gap-2 px-3 rounded-xl border border-[#FFD000]/30 bg-[#FFD000]/10 text-[#FFD000] text-sm font-black hover:bg-[#FFD000]/20 transition-all"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#FFD000] text-[#0a0a0a] flex items-center justify-center text-[11px] font-black">
+                    {firstName?.charAt(0).toUpperCase()}
+                  </div>
+                  {firstName}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenLogin}
+                  className="flex h-10 items-center gap-2 px-4 rounded-xl border border-white/10 bg-white/5 text-white/70 text-sm font-semibold hover:bg-white/10 hover:text-white transition-all"
+                >
+                  <LogIn size={15} /> Login
+                </button>
+              )}
+
               <a
                 href="tel:+919605686000"
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
@@ -124,6 +139,25 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
             >
               <AiWaveIcon size={18} />
             </button>
+            {user ? (
+              <button
+                type="button"
+                onClick={onOpenDashboard}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#FFD000]/30 bg-[#FFD000]/10 text-[#FFD000] font-black text-sm"
+                aria-label="Dashboard"
+              >
+                {firstName?.charAt(0).toUpperCase()}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenLogin}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70"
+                aria-label="Login"
+              >
+                <LogIn size={18} />
+              </button>
+            )}
             <a
               href="tel:+919605686000"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70"
@@ -147,7 +181,7 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
             aria-label="Menu"
           >
             <div className="mb-6 flex items-center justify-between">
-              <span className="font-black text-white text-lg">TS</span>
+              <span className="font-black text-white text-lg">FETS</span>
               <button
                 type="button"
                 className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60"
@@ -182,6 +216,23 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
                   {item.label}
                 </a>
               ))}
+              {user ? (
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-[#FFD000]/20 bg-[#FFD000]/10 px-4 py-3 text-sm font-black text-[#FFD000]"
+                  onClick={() => { onOpenDashboard(); close(); }}
+                >
+                  My Dashboard
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:text-white"
+                  onClick={() => { onOpenLogin(); close(); }}
+                >
+                  <LogIn size={15} /> Login
+                </button>
+              )}
               <a
                 href="tel:+919605686000"
                 className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-[#FFD000] py-3 text-sm font-black text-[#0a0a0a]"
