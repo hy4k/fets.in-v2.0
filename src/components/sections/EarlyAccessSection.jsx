@@ -72,7 +72,7 @@ export default function EarlyAccessSection({ showToast, onSignupSuccess }) {
           {/* Left: copy */}
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-4">Candidate Registration</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6">
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal mb-6">
               Create your<br />FETS account
             </h2>
             <p className="mb-8 leading-relaxed text-white/55">

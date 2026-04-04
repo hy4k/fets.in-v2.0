@@ -28,7 +28,7 @@ export default function StudentResourcesSection() {
           className="mx-auto mb-12 max-w-3xl text-center"
         >
           <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-3">Student resources</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Exam prep that respects your time</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal">Exam prep that respects your time</h2>
           <p className="mt-4 text-white/50 max-w-xl mx-auto leading-relaxed">
             Tips, week-by-week timelines, and printable checklists—curated for candidates sitting professional and English proficiency exams at our centres.
           </p>

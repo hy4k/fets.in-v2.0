@@ -104,7 +104,7 @@ export default function App() {
       />
 
       <main>
-        <HeroSection onOpenChat={() => setIsChatOpen(true)} />
+        <HeroSection />
         <MockExamsSection
           onBookCma={() => setIsCMABookingOpen(true)}
           onBookOther={() => showToast('Call +91 9605686000 or use the calendar to book this exam.')}
@@ -144,12 +144,27 @@ export default function App() {
         </div>
       )}
 
-      {!isChatOpen && (
-        <button type="button" className="fab-ai group" onClick={() => setIsChatOpen(true)} title="Ask EXAM ASSIST">
-          <div className="fab-ai-blob" />
-          <FabWaveIcon />
+      {/* Floating action buttons — always visible */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-center gap-3">
+        <a
+          href="tel:+919605686000"
+          className="fab-phone"
+          aria-label="Call FETS"
+          title="+91 9605686000"
+        >
+          <PhoneIcon />
+        </a>
+        <button
+          type="button"
+          className={`fab-exam-ai ${isChatOpen ? 'fab-exam-ai--active' : ''}`}
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          title="Ask Exam AI"
+          aria-label="Toggle AI chat"
+        >
+          <div className="fab-exam-ai-ring" />
+          {isChatOpen ? <CloseIcon /> : <FabWaveIcon />}
         </button>
-      )}
+      </div>
 
       {isChatOpen && <AgentChatOverlay onClose={() => setIsChatOpen(false)} onOpenPanel={setActivePanel} />}
 
@@ -320,15 +335,30 @@ const Plane = ({ size, className }) => (
   </svg>
 );
 
-function FabWaveIcon({ size }) {
-  const w = size || 22;
+function FabWaveIcon() {
   return (
-    <svg width={w} height={Math.round(w * 0.82)} viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="0" y="6" width="3" height="6" rx="1.5" fill="currentColor" />
-      <rect x="4.75" y="2" width="3" height="14" rx="1.5" fill="currentColor" />
-      <rect x="9.5" y="0" width="3" height="18" rx="1.5" fill="currentColor" />
-      <rect x="14.25" y="2" width="3" height="14" rx="1.5" fill="currentColor" />
-      <rect x="19" y="6" width="3" height="6" rx="1.5" fill="currentColor" />
+    <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="6" width="3" height="6" rx="1.5" fill="currentColor" style={{ animation: 'fabWave1 1.1s ease-in-out infinite' }} />
+      <rect x="4.75" y="2" width="3" height="14" rx="1.5" fill="currentColor" style={{ animation: 'fabWave2 1.1s ease-in-out 0.12s infinite' }} />
+      <rect x="9.5" y="0" width="3" height="18" rx="1.5" fill="currentColor" style={{ animation: 'fabWave3 1.1s ease-in-out 0.24s infinite' }} />
+      <rect x="14.25" y="2" width="3" height="14" rx="1.5" fill="currentColor" style={{ animation: 'fabWave2 1.1s ease-in-out 0.36s infinite' }} />
+      <rect x="19" y="6" width="3" height="6" rx="1.5" fill="currentColor" style={{ animation: 'fabWave1 1.1s ease-in-out 0.48s infinite' }} />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 2L16 16M16 2L2 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.59 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.78a16 16 0 0 0 6.29 6.29l.87-.87a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
     </svg>
   );
 }

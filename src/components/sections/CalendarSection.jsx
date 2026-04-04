@@ -47,7 +47,7 @@ export default function CalendarSection() {
           className="mb-10 text-center"
         >
           <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-3">Exam calendar</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Check available exam dates</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal">Check available exam dates</h2>
           <p className="mt-4 text-white/50 max-w-xl mx-auto leading-relaxed">
             Browse sample availability for your certification. Confirm final slots with our team when you book.
           </p>

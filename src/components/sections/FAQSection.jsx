@@ -17,7 +17,7 @@ export default function FAQSection() {
           viewport={{ once: true }}
         >
           <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-3">FAQ</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Questions candidates ask</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal">Questions candidates ask</h2>
         </motion.div>
       </div>
 

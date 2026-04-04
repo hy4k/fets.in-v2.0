@@ -221,68 +221,99 @@ body {
   box-shadow: 0 0 0 3px rgba(61, 155, 132, 0.12);
 }
 
-/* Floating AI Button */
-.fab-ai {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 60px;
-  height: 60px;
-  border-radius: 30px;
-  background: var(--color-dark-950);
-  color: var(--color-primary-400);
+/* ── Floating action buttons ── */
+
+/* Phone FAB */
+.fab-phone {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  z-index: 50;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.fab-ai:hover {
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-}
-.fab-ai-blob {
-  position: absolute;
-  inset: -4px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  border: 2px solid var(--color-primary-400);
-  opacity: 0;
-  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.65);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  text-decoration: none;
 }
-@keyframes ping {
-  75%,
-  100% {
-    transform: scale(1.3);
-    opacity: 0;
-  }
-  0% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
+.fab-phone:hover {
+  background: #252525;
+  color: white;
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
 }
 
-/* AI Chat Overlay */
+/* Exam AI FAB */
+.fab-exam-ai {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: #0a0a0a;
+  border: 1.5px solid rgba(255,208,0,0.35);
+  color: #FFD000;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 0 0 rgba(255,208,0,0), 0 8px 24px rgba(0,0,0,0.5);
+  overflow: visible;
+}
+.fab-exam-ai:hover {
+  background: #111;
+  border-color: rgba(255,208,0,0.65);
+  transform: scale(1.06) translateY(-2px);
+  box-shadow: 0 0 28px rgba(255,208,0,0.18), 0 10px 30px rgba(0,0,0,0.6);
+}
+.fab-exam-ai--active {
+  background: #1a1500;
+  border-color: rgba(255,208,0,0.5);
+  box-shadow: 0 0 20px rgba(255,208,0,0.2), 0 8px 24px rgba(0,0,0,0.5);
+}
+.fab-exam-ai-ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 22px;
+  border: 1.5px solid rgba(255,208,0,0.4);
+  animation: fabRingPulse 2.4s cubic-bezier(0,0,0.2,1) infinite;
+  pointer-events: none;
+}
+@keyframes fabRingPulse {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  70%  { transform: scale(1.25); opacity: 0; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* Waveform bar keyframes for the FAB icon */
+@keyframes fabWave1 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.4)} }
+@keyframes fabWave2 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.55)} }
+@keyframes fabWave3 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.25)} }
+
+/* AI Chat Panel — slides in from right like part of the page */
 .chat-overlay {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 440px;
+  width: 420px;
   max-width: 100vw;
   background: #080808;
   z-index: 150;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.8), -1px 0 0 rgba(255, 255, 255, 0.05);
-  animation: slide-left-chat 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  box-shadow: -12px 0 48px rgba(0,0,0,0.5);
+  animation: chatSlideIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes slide-left-chat {
+@keyframes chatSlideIn {
   from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  to   { transform: translateX(0); }
 }
 
 
@@ -299,12 +330,6 @@ body {
 
 /* Mobile Adjustments */
 @media (max-width: 768px) {
-  .fab-ai {
-    bottom: 1rem;
-    right: 1rem;
-    width: 56px;
-    height: 56px;
-  }
   .chat-overlay {
     bottom: 0;
     right: 0;

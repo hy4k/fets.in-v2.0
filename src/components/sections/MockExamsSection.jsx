@@ -50,7 +50,7 @@ export default function MockExamsSection({ onBookCma }) {
           className="mb-12 text-center"
         >
           <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-3">Exam Test Drive</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Practice in real exam conditions</h2>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-normal">Practice in real exam conditions</h2>
           <p className="mt-4 text-white/50 max-w-xl mx-auto leading-relaxed">
             Familiarize yourself with the testing environment and format through our authentic mock experience.
           </p>
@@ -88,7 +88,7 @@ export default function MockExamsSection({ onBookCma }) {
                 {mock.label}
               </div>
 
-              <h3 className={`text-2xl font-black mb-3 tracking-tight ${mock.comingSoon ? 'text-white/40' : 'text-white'}`}>
+              <h3 className={`text-2xl font-black mb-3 tracking-normal ${mock.comingSoon ? 'text-white/40' : 'text-white'}`}>
                 {mock.name}
               </h3>
 

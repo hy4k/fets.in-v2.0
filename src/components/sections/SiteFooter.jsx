@@ -27,7 +27,7 @@ export default function SiteFooter({ onOpenCalicut, onOpenKochi }) {
         <div className="container-custom">
           <div className="text-center mb-10">
             <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-3">Certified Testing Partners</p>
-            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-black text-white tracking-normal">
               Authorized Testing Partner For
             </h2>
           </div>

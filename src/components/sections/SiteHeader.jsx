@@ -3,8 +3,8 @@ import { Menu, X, MapPin, Phone, LogIn } from 'lucide-react';
 
 const NAV_MOBILE = [
   { href: '#mock-exams', label: 'Exam Test Drive' },
+  { href: '#register', label: 'Early Access' },
   { href: '#faq', label: 'FAQ' },
-  { href: '#register', label: 'Register' },
 ];
 
 function AiWaveIcon({ size = 20 }) {
@@ -70,13 +70,13 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
               </button>
             </div>
 
-            {/* Centre: Register + Exam Test Drive */}
+            {/* Centre: Early Access + Exam Test Drive */}
             <div className="flex gap-2">
               <a
                 href="#register"
                 className="inline-flex items-center h-10 px-4 rounded-lg text-white/60 text-sm font-semibold hover:text-white hover:bg-white/5 transition-all"
               >
-                Register
+                Early Access
               </a>
               <a
                 href="#mock-exams"
@@ -86,17 +86,8 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
               </a>
             </div>
 
-            {/* Right: AI + Login/User + Phone */}
+            {/* Right: Login/User + Phone */}
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onOpenChat}
-                className="group relative flex h-10 items-center gap-2.5 overflow-hidden rounded-xl border border-white/10 bg-white/5 px-4 text-[#FFD000] transition-all hover:border-[#FFD000]/30 hover:bg-white/10"
-                title="Ask EXAM ASSIST"
-              >
-                <AiWaveIcon size={18} />
-                <span className="text-[12px] font-black uppercase tracking-widest text-[#FFD000]">Exam AI</span>
-              </button>
 
               {user ? (
                 <button
