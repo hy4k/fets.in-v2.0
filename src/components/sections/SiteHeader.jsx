@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, MapPin, Phone, LogIn } from 'lucide-react';
+import { Menu, X, MapPin, LogIn } from 'lucide-react';
 
 const NAV_MOBILE = [
   { href: '#mock-exams', label: 'Exam Test Drive' },
@@ -70,14 +70,8 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
               </button>
             </div>
 
-            {/* Centre: Early Access + Exam Test Drive */}
+            {/* Centre: Exam Test Drive */}
             <div className="flex gap-2">
-              <a
-                href="#register"
-                className="inline-flex items-center h-10 px-4 rounded-lg text-white/60 text-sm font-semibold hover:text-white hover:bg-white/5 transition-all"
-              >
-                Early Access
-              </a>
               <a
                 href="#mock-exams"
                 className="inline-flex items-center h-10 px-5 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-sm font-black hover:bg-[#ffe44d] transition-all shadow-[0_4px_16px_rgba(255,208,0,0.2)]"
@@ -86,16 +80,22 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
               </a>
             </div>
 
-            {/* Right: Login/User + Phone */}
+            {/* Right: Early Access + Login/User */}
             <div className="flex items-center gap-2">
+              <a
+                href="#register"
+                className="inline-flex items-center h-10 px-5 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-sm font-black hover:bg-[#ffe44d] transition-all shadow-[0_4px_16px_rgba(255,208,0,0.2)]"
+              >
+                Early Access
+              </a>
 
               {user ? (
                 <button
                   type="button"
                   onClick={onOpenDashboard}
-                  className="flex h-10 items-center gap-2 px-3 rounded-xl border border-[#FFD000]/30 bg-[#FFD000]/10 text-[#FFD000] text-sm font-black hover:bg-[#FFD000]/20 transition-all"
+                  className="flex h-10 items-center gap-2 px-4 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-sm font-black hover:bg-[#ffe44d] transition-all shadow-[0_4px_16px_rgba(255,208,0,0.2)]"
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#FFD000] text-[#0a0a0a] flex items-center justify-center text-[11px] font-black">
+                  <div className="w-5 h-5 rounded-full bg-[#0a0a0a]/20 flex items-center justify-center text-[10px] font-black">
                     {firstName?.charAt(0).toUpperCase()}
                   </div>
                   {firstName}
@@ -104,19 +104,11 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="flex h-10 items-center gap-2 px-4 rounded-xl border border-white/10 bg-white/5 text-white/70 text-sm font-semibold hover:bg-white/10 hover:text-white transition-all"
+                  className="flex h-10 items-center gap-2 px-5 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-sm font-black hover:bg-[#ffe44d] transition-all shadow-[0_4px_16px_rgba(255,208,0,0.2)]"
                 >
                   <LogIn size={15} /> Login
                 </button>
               )}
-
-              <a
-                href="tel:+919605686000"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-                aria-label="Call FETS"
-              >
-                <Phone size={18} />
-              </a>
             </div>
           </nav>
 
@@ -149,13 +141,6 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
                 <LogIn size={18} />
               </button>
             )}
-            <a
-              href="tel:+919605686000"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70"
-              aria-label="Call FETS"
-            >
-              <Phone size={18} />
-            </a>
           </div>
         </div>
       </header>

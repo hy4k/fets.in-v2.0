@@ -16,17 +16,6 @@ export default function HeroSection() {
 
       <div className="container-custom relative z-10 mx-auto flex max-w-6xl flex-col items-center px-6 text-center">
 
-        {/* Overline badge */}
-        <motion.div
-          variants={fade}
-          initial="hidden"
-          animate="show"
-          className="mb-10 inline-flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-6 py-2.5 text-[10px] font-black uppercase tracking-[0.3em] text-[#FFD000] shadow-inner backdrop-blur-xl"
-        >
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FFD000] animate-pulse" />
-          INDIA'S PREMIUM TESTING INFRASTRUCTURE
-        </motion.div>
-
         {/* Headline */}
         <motion.div
           variants={fade}
