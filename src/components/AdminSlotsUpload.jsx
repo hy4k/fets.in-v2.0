@@ -99,6 +99,40 @@ function parseExcelFile(file, onDone, onError) {
   reader.readAsBinaryString(file);
 }
 
+// ─── Period Grouping ─────────────────────────────────────────────────────────
+
+const BI_PERIODS = ['Jan – Feb','Mar – Apr','May – Jun','Jul – Aug','Sep – Oct','Nov – Dec'];
+
+function periodLabel(dateStr) {
+  if (!dateStr) return 'Undated';
+  const d = new Date(String(dateStr).includes('T') ? dateStr : dateStr + 'T00:00:00');
+  if (isNaN(d)) return 'Undated';
+  return `${BI_PERIODS[Math.floor(d.getMonth() / 2)]} ${d.getFullYear()}`;
+}
+
+function groupByPeriod(items, getDate) {
+  const map = {};
+  for (const item of items) {
+    const key = periodLabel(getDate(item));
+    if (!map[key]) map[key] = [];
+    map[key].push(item);
+  }
+  return Object.entries(map).sort((a, b) => {
+    const parseKey = k => { const y = parseInt(k.slice(-4)); const p = BI_PERIODS.findIndex(x => k.startsWith(x)); return y * 10 + p; };
+    return parseKey(b[0]) - parseKey(a[0]);
+  });
+}
+
+function PeriodHeader({ label, count }) {
+  return (
+    <div className="flex items-center gap-3 mt-6 mb-2 first:mt-0">
+      <span className="text-xs font-black text-dark-600 uppercase tracking-[0.2em]">{label}</span>
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-dark-950/8 text-dark-600">{count}</span>
+      <div className="flex-1 h-px bg-light-200"/>
+    </div>
+  );
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function TabBtn({ active, onClick, children }) {
@@ -755,51 +789,56 @@ function CmaRequestsTab() {
         ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-primary-500"/></div>
         : rows.length === 0
           ? <p className="text-center py-10 text-sm text-dark-800">No CMA mock requests yet.</p>
-          : rows.map(r => (
-            <div key={r.id} className="border border-light-200 rounded-xl overflow-hidden">
-              <button
-                onClick={() => r.booking_type === 'institutional' ? loadStudents(r.id) : setExpanded(expanded === r.id ? null : r.id)}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${r.booking_type === 'institutional' ? 'bg-blue-100 text-blue-700' : 'bg-primary-400/15 text-primary-600'}`}>
-                    {r.booking_type === 'institutional' ? 'Bulk' : 'Direct'}
-                  </span>
-                  <span className="font-semibold text-dark-950 text-sm truncate">
-                    {r.lead_name || `Coaching Center · ${r.student_count} students`}
-                  </span>
-                  <span className="text-xs text-dark-800 shrink-0">{r.exam_part}</span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className="text-xs text-dark-800">{r.preferred_date}</span>
-                  <StatusBadge value={r.status} />
-                  <ChevronDown size={14} className={`text-dark-800 transition-transform ${expanded === r.id ? 'rotate-180' : ''}`}/>
-                </div>
-              </button>
-
-              {expanded === r.id && (
-                <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                    {r.booking_type === 'direct' && <>
-                      <div><span className="text-dark-600 font-semibold">Email: </span><span className="text-dark-950">{r.lead_email || '—'}</span></div>
-                      <div><span className="text-dark-600 font-semibold">Phone: </span><span className="text-dark-950">{r.lead_phone || '—'}</span></div>
-                    </>}
-                    <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{r.session_time}</span></div>
-                    <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{r.payment_method}</span></div>
-                    <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{r.created_at ? new Date(r.created_at).toLocaleString('en-IN') : '—'}</span></div>
+          : groupByPeriod(rows, r => r.preferred_date).map(([period, items]) => (
+            <div key={period}>
+              <PeriodHeader label={period} count={items.length} />
+              <div className="space-y-2">
+                {items.map(r => (
+                  <div key={r.id} className="border border-light-200 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => r.booking_type === 'institutional' ? loadStudents(r.id) : setExpanded(expanded === r.id ? null : r.id)}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${r.booking_type === 'institutional' ? 'bg-blue-100 text-blue-700' : 'bg-primary-400/15 text-primary-600'}`}>
+                          {r.booking_type === 'institutional' ? 'Bulk' : 'Direct'}
+                        </span>
+                        <span className="font-semibold text-dark-950 text-sm truncate">
+                          {r.lead_name || `Coaching Center · ${r.student_count} students`}
+                        </span>
+                        <span className="text-xs text-dark-800 shrink-0">{r.exam_part}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="text-xs text-dark-800">{r.preferred_date}</span>
+                        <StatusBadge value={r.status} />
+                        <ChevronDown size={14} className={`text-dark-800 transition-transform ${expanded === r.id ? 'rotate-180' : ''}`}/>
+                      </div>
+                    </button>
+                    {expanded === r.id && (
+                      <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                          {r.booking_type === 'direct' && <>
+                            <div><span className="text-dark-600 font-semibold">Email: </span><span className="text-dark-950">{r.lead_email || '—'}</span></div>
+                            <div><span className="text-dark-600 font-semibold">Phone: </span><span className="text-dark-950">{r.lead_phone || '—'}</span></div>
+                          </>}
+                          {r.confirmation_code && <div><span className="text-dark-600 font-semibold">Booking Code: </span><span className="font-mono font-bold text-dark-950">{r.confirmation_code}</span></div>}
+                          <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{r.session_time}</span></div>
+                          <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{r.payment_method}</span></div>
+                          <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{r.created_at ? new Date(r.created_at).toLocaleString('en-IN') : '—'}</span></div>
+                        </div>
+                        {r.booking_type === 'institutional' && students[r.id] && (
+                          <div>
+                            <p className="font-bold text-dark-950 mb-1.5">Student Roster ({students[r.id].length})</p>
+                            <ol className="space-y-1">
+                              {students[r.id].map((s, i) => <li key={i} className="text-dark-800">{i + 1}. {s.student_name}</li>)}
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {r.booking_type === 'institutional' && students[r.id] && (
-                    <div>
-                      <p className="font-bold text-dark-950 mb-1.5">Student Roster ({students[r.id].length})</p>
-                      <ol className="space-y-1">
-                        {students[r.id].map((s, i) => (
-                          <li key={i} className="text-dark-800">{i + 1}. {s.student_name}</li>
-                        ))}
-                      </ol>
-                    </div>
-                  )}
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           ))
       }
@@ -1099,49 +1138,49 @@ function InstitutesTab() {
           ) : instBookings.length === 0 ? (
             <p className="text-center py-8 text-sm text-dark-600">No institutional bookings yet.</p>
           ) : (
-            <div className="space-y-2">
-              {instBookings.map(b => (
-                <div key={b.id} className="border border-light-200 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => loadBookingStudents(b.id)}
-                    className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Bulk</span>
-                      <span className="font-semibold text-dark-950 text-sm truncate">
-                        {b.coaching_centers?.name || 'Unknown Institute'}
-                      </span>
-                      <span className="text-xs text-dark-600 shrink-0">{b.exam_part}</span>
-                      <span className="text-xs text-dark-600 shrink-0">{b.student_count} students</span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs text-dark-700">{b.preferred_date}</span>
-                      <StatusBadge value={b.status || 'pending'} />
-                      <ChevronDown size={13} className={`text-dark-600 transition-transform ${expandedBooking === b.id ? 'rotate-180' : ''}`}/>
-                    </div>
-                  </button>
-
-                  {expandedBooking === b.id && (
-                    <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
-                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
-                        <div><span className="text-dark-600 font-semibold">Institute: </span><span className="text-dark-950 font-bold">{b.coaching_centers?.name || '—'}</span></div>
-                        <div><span className="text-dark-600 font-semibold">City: </span><span className="text-dark-950">{b.coaching_centers?.city || '—'}</span></div>
-                        <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{b.session_time}</span></div>
-                        <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{b.payment_method}</span></div>
-                        <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{b.created_at ? new Date(b.created_at).toLocaleString('en-IN') : '—'}</span></div>
-                      </div>
-                      {bookingStudents[b.id] && (
-                        <div>
-                          <p className="font-bold text-dark-950 mb-1.5">Student Roster ({bookingStudents[b.id].length})</p>
-                          <div className="grid grid-cols-2 gap-1">
-                            {bookingStudents[b.id].map((s, i) => (
-                              <span key={i} className="text-dark-700">{i + 1}. {s.student_name}</span>
-                            ))}
+            <div>
+              {groupByPeriod(instBookings, b => b.preferred_date).map(([period, items]) => (
+                <div key={period}>
+                  <PeriodHeader label={period} count={items.length} />
+                  <div className="space-y-2">
+                    {items.map(b => (
+                      <div key={b.id} className="border border-light-200 rounded-xl overflow-hidden">
+                        <button onClick={() => loadBookingStudents(b.id)}
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Bulk</span>
+                            <span className="font-semibold text-dark-950 text-sm truncate">{b.coaching_centers?.name || 'Unknown Institute'}</span>
+                            <span className="text-xs text-dark-600 shrink-0">{b.exam_part}</span>
+                            <span className="text-xs text-dark-600 shrink-0">{b.student_count} students</span>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-xs text-dark-700">{b.preferred_date}</span>
+                            <StatusBadge value={b.status || 'pending'} />
+                            <ChevronDown size={13} className={`text-dark-600 transition-transform ${expandedBooking === b.id ? 'rotate-180' : ''}`}/>
+                          </div>
+                        </button>
+                        {expandedBooking === b.id && (
+                          <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
+                            <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                              <div><span className="text-dark-600 font-semibold">Institute: </span><span className="text-dark-950 font-bold">{b.coaching_centers?.name || '—'}</span></div>
+                              <div><span className="text-dark-600 font-semibold">City: </span><span className="text-dark-950">{b.coaching_centers?.city || '—'}</span></div>
+                              <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{b.session_time}</span></div>
+                              <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{b.payment_method}</span></div>
+                              <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{b.created_at ? new Date(b.created_at).toLocaleString('en-IN') : '—'}</span></div>
+                            </div>
+                            {bookingStudents[b.id] && (
+                              <div>
+                                <p className="font-bold text-dark-950 mb-1.5">Student Roster ({bookingStudents[b.id].length})</p>
+                                <div className="grid grid-cols-2 gap-1">
+                                  {bookingStudents[b.id].map((s, i) => <span key={i} className="text-dark-700">{i + 1}. {s.student_name}</span>)}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1175,8 +1214,10 @@ function ResultsTab() {
   const [search, setSearch]       = useState('');
 
   // Upload state
+  const [uploadMode, setUploadMode] = useState('institute'); // 'institute' | 'individual'
   const [centers, setCenters]     = useState([]);
   const [selectedCenter, setSelectedCenter] = useState('');
+  const [candidateEmail, setCandidateEmail] = useState('');
   const [parsedRows, setParsedRows] = useState([]);
   const [parseErr, setParseErr]   = useState('');
   const [uploading, setUploading] = useState(false);
@@ -1240,14 +1281,20 @@ function ResultsTab() {
   };
 
   const handleUpload = async () => {
-    if (!selectedCenter) { setUploadMsg({ ok: false, msg: 'Select an institute first.' }); return; }
+    if (uploadMode === 'institute' && !selectedCenter) { setUploadMsg({ ok: false, msg: 'Select an institute first.' }); return; }
+    if (uploadMode === 'individual' && !candidateEmail.trim()) { setUploadMsg({ ok: false, msg: 'Enter candidate email first.' }); return; }
     if (!parsedRows.length) { setUploadMsg({ ok: false, msg: 'Parse an Excel file first.' }); return; }
     setUploading(true); setUploadMsg(null);
     try {
-      const rows = parsedRows.map(r => ({ ...r, coaching_center_id: selectedCenter }));
+      const rows = parsedRows.map(r => ({
+        ...r,
+        ...(uploadMode === 'institute'
+          ? { coaching_center_id: selectedCenter }
+          : { candidate_email: candidateEmail.trim().toLowerCase() }),
+      }));
       const { error } = await supabase.from('exam_results').insert(rows);
       if (error) throw error;
-      setUploadMsg({ ok: true, msg: `${rows.length} results published. Institute dashboard updated.` });
+      setUploadMsg({ ok: true, msg: `${rows.length} results published.${uploadMode === 'institute' ? ' Institute dashboard updated.' : ' Candidate dashboard updated.'}` });
       setParsedRows([]); if (fileRef.current) fileRef.current.value = '';
       fetchResults();
     } catch (err) { setUploadMsg({ ok: false, msg: err.message || 'Upload failed.' }); }
@@ -1302,6 +1349,16 @@ function ResultsTab() {
 
         {showUpload && (
           <div className="p-4 bg-light-50 space-y-4">
+            {/* Mode toggle */}
+            <div className="flex gap-1 bg-light-200 rounded-xl p-1">
+              {[['institute', 'Institute Results'], ['individual', 'Individual Candidate']].map(([mode, label]) => (
+                <button key={mode} onClick={() => { setUploadMode(mode); setUploadMsg(null); setParsedRows([]); if (fileRef.current) fileRef.current.value = ''; }}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${uploadMode === mode ? 'bg-dark-950 text-white shadow-sm' : 'text-dark-700 hover:text-dark-950'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+
             {/* Template download */}
             <div className="flex items-center justify-between rounded-lg border border-light-200 bg-white px-4 py-3">
               <div>
@@ -1313,20 +1370,30 @@ function ResultsTab() {
               </button>
             </div>
 
-            {/* Institute selector */}
-            <div>
-              <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Select Institute *</label>
-              <select
-                value={selectedCenter}
-                onChange={e => setSelectedCenter(e.target.value)}
-                className="input-clean text-sm w-full"
-              >
-                <option value="">— Choose institute —</option>
-                {centers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}{c.city ? ` (${c.city})` : ''}</option>
-                ))}
-              </select>
-            </div>
+            {/* Institute selector OR candidate email */}
+            {uploadMode === 'institute' ? (
+              <div>
+                <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Select Institute *</label>
+                <select value={selectedCenter} onChange={e => setSelectedCenter(e.target.value)} className="input-clean text-sm w-full">
+                  <option value="">— Choose institute —</option>
+                  {centers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}{c.city ? ` (${c.city})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Candidate Email *</label>
+                <input
+                  type="email"
+                  value={candidateEmail}
+                  onChange={e => setCandidateEmail(e.target.value)}
+                  placeholder="candidate@email.com"
+                  className="input-clean text-sm w-full"
+                />
+                <p className="text-[11px] text-dark-500 mt-1">Results will appear in this candidate's personal dashboard when they log in.</p>
+              </div>
+            )}
 
             {/* File upload */}
             <div>
@@ -1370,11 +1437,11 @@ function ResultsTab() {
 
             <button
               onClick={handleUpload}
-              disabled={uploading || !parsedRows.length || !selectedCenter}
+              disabled={uploading || !parsedRows.length || (uploadMode === 'institute' ? !selectedCenter : !candidateEmail.trim())}
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-dark-950 text-white text-sm font-bold hover:bg-dark-800 disabled:opacity-40 transition-all"
             >
               {uploading ? <Loader2 size={14} className="animate-spin"/> : <Upload size={14}/>}
-              {uploading ? 'Publishing…' : `Publish ${parsedRows.length || ''} Results to Institute Dashboard`}
+              {uploading ? 'Publishing…' : `Publish ${parsedRows.length || ''} Results${uploadMode === 'institute' ? ' to Institute Dashboard' : ' to Candidate Dashboard'}`}
             </button>
           </div>
         )}
@@ -1479,92 +1546,113 @@ export default function AdminSlotsUpload({ onClose }) {
     else setAuthError('Incorrect password.');
   };
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden border border-light-200">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-light-200 shrink-0 bg-dark-950">
-          <div>
-            <h2 className="text-base font-black text-white tracking-tight">FETS Admin Panel</h2>
-            <p className="text-[11px] text-white/40 mt-0.5">
-              Access via URL: <span className="text-[#FFD000] font-mono">yoursite.com/?admin=true</span>
-            </p>
+  /* ── Login screen ── */
+  if (!authenticated) {
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0a0a0a]/95 backdrop-blur-sm p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 border border-light-200">
+          <div className="mb-6 text-center">
+            <div className="w-12 h-12 rounded-xl bg-dark-950 flex items-center justify-center mx-auto mb-3">
+              <Eye size={22} className="text-[#FFD000]"/>
+            </div>
+            <h3 className="text-lg font-bold text-dark-950">Admin Access</h3>
+            <p className="text-sm text-dark-800 mt-1">Enter your admin password to continue.</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
-            <X size={18}/>
-          </button>
+          <div className="relative mb-3">
+            <input
+              type={showPw ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && authenticate()}
+              placeholder="Admin password"
+              className="input-clean pr-10 font-mono tracking-widest"
+              autoFocus
+            />
+            <button onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-800 hover:text-dark-950">
+              {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+            </button>
+          </div>
+          {authError && <p className="text-red-500 text-xs mb-3 text-center">{authError}</p>}
+          <button onClick={authenticate} className="btn-primary w-full h-11">Login</button>
+          <p className="text-center text-[10px] text-dark-600 mt-4">
+            Password: <span className="font-mono">fets@in</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const activeTab = TABS.find(t => t.id === tab);
+
+  /* ── Full-page admin dashboard ── */
+  return (
+    <div className="fixed inset-0 z-[70] flex">
+
+      {/* ── Sidebar ── */}
+      <div className="w-52 xl:w-60 bg-[#0e0e0e] border-r border-white/[0.06] flex flex-col shrink-0">
+        {/* Brand */}
+        <div className="px-5 py-5 border-b border-white/[0.06]">
+          <p className="text-[#FFD000] font-black text-lg tracking-tight leading-none">FETS</p>
+          <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Admin Panel</p>
         </div>
 
-        <div className="overflow-y-auto flex-1 flex flex-col">
-          {!authenticated ? (
-            /* ── Login ── */
-            <div className="max-w-sm mx-auto w-full py-12 px-6">
-              <div className="mb-6 text-center">
-                <div className="w-12 h-12 rounded-xl bg-dark-950 flex items-center justify-center mx-auto mb-3">
-                  <Eye size={22} className="text-[#FFD000]"/>
-                </div>
-                <h3 className="text-lg font-bold text-dark-950">Admin Access</h3>
-                <p className="text-sm text-dark-800 mt-1">Enter your admin password to continue.</p>
-              </div>
-              <div className="relative mb-3">
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && authenticate()}
-                  placeholder="Admin password"
-                  className="input-clean pr-10 font-mono tracking-widest"
-                  autoFocus
-                />
-                <button onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-800 hover:text-dark-950">
-                  {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
-                </button>
-              </div>
-              {authError && <p className="text-red-500 text-xs mb-3 text-center">{authError}</p>}
-              <button onClick={authenticate} className="btn-primary w-full h-11">Login</button>
-              <p className="text-center text-[10px] text-dark-600 mt-4">
-                Default password: <span className="font-mono">fets@in</span>
-              </p>
-            </div>
-          ) : (
-            /* ── Authenticated ── */
-            <div className="flex flex-col flex-1 min-h-0">
-              {!isSupabaseConfigured && (
-                <div className="mx-6 mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-                  ⚠ Supabase not configured — set <code className="rounded bg-white/80 px-1">VITE_SUPABASE_URL</code> and <code className="rounded bg-white/80 px-1">VITE_SUPABASE_ANON_KEY</code> in .env, then rebuild.
-                </div>
-              )}
+        {/* Nav */}
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${
+                tab === t.id
+                  ? 'bg-[#FFD000] text-[#0a0a0a]'
+                  : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <t.icon size={15} className="shrink-0" />
+              <span className="truncate">{t.label}</span>
+            </button>
+          ))}
+        </nav>
 
-              {/* Tab bar */}
-              <div className="flex gap-0 border-b border-light-200 px-4 shrink-0 overflow-x-auto">
-                {TABS.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setTab(t.id)}
-                    className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold whitespace-nowrap border-b-2 transition-colors ${
-                      tab === t.id
-                        ? 'border-dark-950 text-dark-950'
-                        : 'border-transparent text-dark-600 hover:text-dark-950'
-                    }`}
-                  >
-                    <t.icon size={13}/> {t.label}
-                  </button>
-                ))}
-              </div>
+        {/* Supabase warning */}
+        {!isSupabaseConfigured && (
+          <div className="mx-2 mb-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2">
+            <p className="text-amber-400 text-[10px] font-bold leading-snug">⚠ Supabase not configured</p>
+          </div>
+        )}
 
-              {/* Tab content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {tab === 'leads'      && <LeadsTab />}
-                {tab === 'cma'        && <CmaRequestsTab />}
-                {tab === 'bookings'   && <BookingsTab />}
-                {tab === 'institutes' && <InstitutesTab />}
-                {tab === 'results'    && <ResultsTab />}
-                {tab === 'manage'     && <ManageTab />}
-                {tab === 'upload'     && <UploadTab />}
-              </div>
-            </div>
-          )}
+        {/* Exit */}
+        <div className="px-2 py-3 border-t border-white/[0.06]">
+          <button
+            onClick={onClose}
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"
+          >
+            <X size={14} className="shrink-0" />
+            Close Admin
+          </button>
+        </div>
+      </div>
+
+      {/* ── Main content ── */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white">
+        {/* Page header */}
+        <div className="flex items-center gap-3 px-6 h-14 border-b border-light-200 shrink-0 bg-white">
+          {activeTab && <activeTab.icon size={16} className="text-dark-600 shrink-0" />}
+          <h2 className="text-sm font-black text-dark-950 tracking-tight">{activeTab?.label}</h2>
+          <div className="ml-auto">
+            <p className="text-[10px] text-dark-500 font-mono">fets.in/?admin=true</p>
+          </div>
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-y-auto p-6 xl:p-8">
+          {tab === 'leads'      && <LeadsTab />}
+          {tab === 'cma'        && <CmaRequestsTab />}
+          {tab === 'bookings'   && <BookingsTab />}
+          {tab === 'institutes' && <InstitutesTab />}
+          {tab === 'results'    && <ResultsTab />}
+          {tab === 'manage'     && <ManageTab />}
+          {tab === 'upload'     && <UploadTab />}
         </div>
       </div>
     </div>

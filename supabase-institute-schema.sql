@@ -69,3 +69,5 @@ DROP POLICY IF EXISTS "Institutes can read their exam results" ON exam_results;
 CREATE POLICY "Institutes can read their exam results"
   ON exam_results FOR SELECT USING (true);
 CREATE INDEX IF NOT EXISTS idx_exam_results_center ON exam_results(coaching_center_id);
+ALTER TABLE exam_results ADD COLUMN IF NOT EXISTS candidate_email TEXT;
+CREATE INDEX IF NOT EXISTS idx_exam_results_email ON exam_results(candidate_email);
