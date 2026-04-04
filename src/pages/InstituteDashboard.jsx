@@ -321,7 +321,6 @@ function BulkBookingModal({ center, onClose, onSuccess }) {
         session_time: sessionTime,
         payment_method: paymentMethod,
         student_count: finalStudents.length,
-        status: 'pending',
       }).select().single();
       if (bErr) throw bErr;
       const { error: sErr } = await supabase.from('cma_mock_students').insert(

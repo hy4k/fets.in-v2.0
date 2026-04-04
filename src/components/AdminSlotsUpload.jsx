@@ -819,6 +819,13 @@ function InstitutesTab() {
   const [bookingCounts, setBookingCounts] = useState({});
   const [revealedCodes, setRevealedCodes] = useState({});
 
+  // Institute bookings
+  const [instBookings, setInstBookings] = useState([]);
+  const [instBookingsLoading, setInstBookingsLoading] = useState(false);
+  const [expandedBooking, setExpandedBooking] = useState(null);
+  const [bookingStudents, setBookingStudents] = useState({});
+  const [showBookings, setShowBookings] = useState(true);
+
   // Form state
   const [name, setName] = useState('');
   const [city, setCity] = useState('Calicut');
@@ -849,6 +856,29 @@ function InstitutesTab() {
   }, []);
 
   useEffect(() => { fetchCenters(); }, [fetchCenters]);
+
+  const fetchInstBookings = useCallback(async () => {
+    if (!supabase) return;
+    setInstBookingsLoading(true);
+    const { data } = await supabase
+      .from('cma_mock_bookings')
+      .select('*, coaching_centers(name, city)')
+      .eq('booking_type', 'institutional')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setInstBookings(data || []);
+    setInstBookingsLoading(false);
+  }, []);
+
+  useEffect(() => { fetchInstBookings(); }, [fetchInstBookings]);
+
+  const loadBookingStudents = async (bookingId) => {
+    if (expandedBooking === bookingId) { setExpandedBooking(null); return; }
+    setExpandedBooking(bookingId);
+    if (bookingStudents[bookingId]) return;
+    const { data } = await supabase.from('cma_mock_students').select('student_name').eq('booking_id', bookingId);
+    setBookingStudents(p => ({ ...p, [bookingId]: data || [] }));
+  };
 
   const generateCode = () => {
     const firstWord = name.trim().split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
@@ -1022,6 +1052,102 @@ function InstitutesTab() {
           </table>
         </div>
       )}
+
+      {/* ── Institute Bookings section ── */}
+      <div className="mt-6 pt-5 border-t border-light-200">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBookings(!showBookings)}
+              className="flex items-center gap-2 text-sm font-bold text-dark-950 hover:text-dark-700"
+            >
+              <ChevronDown size={15} className={`transition-transform ${showBookings ? 'rotate-0' : '-rotate-90'}`}/>
+              Institute Bookings
+            </button>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{instBookings.length}</span>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={fetchInstBookings} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+              <RefreshCw size={12} className={instBookingsLoading ? 'animate-spin' : ''}/> Refresh
+            </button>
+            <button
+              onClick={() => {
+                const flat = instBookings.map(b => ({
+                  institute: b.coaching_centers?.name || '',
+                  city: b.coaching_centers?.city || '',
+                  exam_part: b.exam_part,
+                  preferred_date: b.preferred_date,
+                  session: b.session_time,
+                  students: b.student_count,
+                  payment: b.payment_method,
+                  status: b.status || 'pending',
+                  submitted: b.created_at ? new Date(b.created_at).toLocaleDateString('en-IN') : '',
+                }));
+                exportCSV(flat, 'fets-institute-bookings.csv');
+              }}
+              disabled={!instBookings.length}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800 disabled:opacity-40"
+            >
+              <Download size={12}/> Export CSV
+            </button>
+          </div>
+        </div>
+
+        {showBookings && (
+          instBookingsLoading ? (
+            <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-primary-500"/></div>
+          ) : instBookings.length === 0 ? (
+            <p className="text-center py-8 text-sm text-dark-600">No institutional bookings yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {instBookings.map(b => (
+                <div key={b.id} className="border border-light-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => loadBookingStudents(b.id)}
+                    className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Bulk</span>
+                      <span className="font-semibold text-dark-950 text-sm truncate">
+                        {b.coaching_centers?.name || 'Unknown Institute'}
+                      </span>
+                      <span className="text-xs text-dark-600 shrink-0">{b.exam_part}</span>
+                      <span className="text-xs text-dark-600 shrink-0">{b.student_count} students</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-dark-700">{b.preferred_date}</span>
+                      <StatusBadge value={b.status || 'pending'} />
+                      <ChevronDown size={13} className={`text-dark-600 transition-transform ${expandedBooking === b.id ? 'rotate-180' : ''}`}/>
+                    </div>
+                  </button>
+
+                  {expandedBooking === b.id && (
+                    <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
+                      <div className="grid grid-cols-3 gap-x-6 gap-y-2">
+                        <div><span className="text-dark-600 font-semibold">Institute: </span><span className="text-dark-950 font-bold">{b.coaching_centers?.name || '—'}</span></div>
+                        <div><span className="text-dark-600 font-semibold">City: </span><span className="text-dark-950">{b.coaching_centers?.city || '—'}</span></div>
+                        <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{b.session_time}</span></div>
+                        <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{b.payment_method}</span></div>
+                        <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{b.created_at ? new Date(b.created_at).toLocaleString('en-IN') : '—'}</span></div>
+                      </div>
+                      {bookingStudents[b.id] && (
+                        <div>
+                          <p className="font-bold text-dark-950 mb-1.5">Student Roster ({bookingStudents[b.id].length})</p>
+                          <div className="grid grid-cols-2 gap-1">
+                            {bookingStudents[b.id].map((s, i) => (
+                              <span key={i} className="text-dark-700">{i + 1}. {s.student_name}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }

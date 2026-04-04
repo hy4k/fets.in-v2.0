@@ -17,8 +17,12 @@ CREATE POLICY "Public can read coaching centers"
   ON coaching_centers FOR SELECT USING (true);
 
 -- ── cma_mock_bookings ──────────────────────────────────────────────────────────
--- Add confirmation_code column for individual bookings
+-- Add columns that may be missing if table was created before the full schema
 ALTER TABLE cma_mock_bookings ADD COLUMN IF NOT EXISTS confirmation_code TEXT;
+ALTER TABLE cma_mock_bookings ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending';
+
+-- Update any NULL status values to 'pending'
+UPDATE cma_mock_bookings SET status = 'pending' WHERE status IS NULL;
 
 -- Allow anon to read all cma_mock_bookings (admin panel + institute dashboard)
 DROP POLICY IF EXISTS "Public can read institutional cma bookings" ON cma_mock_bookings;
