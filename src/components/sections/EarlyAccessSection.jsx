@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle2, Sparkles, Star } from 'lucide-react';
+import { Bell, CheckCircle2, Star } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 const EXAMS = ['CMA US', 'CELPIP', 'IELTS', 'Other'];
@@ -20,126 +20,125 @@ export default function EarlyAccessSection({ showToast }) {
       return;
     }
     if (!supabase) {
-      showToast(
-        'Registration is not configured on this server yet. Please email edu@fets.in or call +91 9605686000.',
-        'error',
-      );
+      showToast('Registration is not configured. Please email edu@fets.in or call +91 9605686000.', 'error');
       return;
     }
     setPending(true);
     try {
       const { error } = await supabase.from('early_access_leads').insert({
-        full_name,
-        email,
-        phone: phone || null,
-        interested_exam: interested_exam || null,
+        full_name, email, phone: phone || null, interested_exam: interested_exam || null,
       });
       if (error) throw error;
       showToast("You're on the list. We'll email you when new dates open.");
       e.target.reset();
     } catch (err) {
       console.error(err);
-      showToast(
-        'We could not save your registration. Please email edu@fets.in or call +91 9605686000.',
-        'error',
-      );
+      showToast('Could not save registration. Please email edu@fets.in or call +91 9605686000.', 'error');
     } finally {
       setPending(false);
     }
   };
 
   return (
-    <section id="early-access" className="section-padding bg-[#f4ece0]">
+    <section id="early-access" className="section-padding bg-[#0f0f0f] border-t border-white/[0.06]">
       <div className="container-custom">
-        <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2">
+
+          {/* Left: copy */}
           <motion.div
             initial={{ opacity: 0, x: -12 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45 }}
           >
-            <h4 className="text-overline mb-3 text-primary-600">Exclusive access</h4>
-            <h2 className="heading-serif mb-6 text-4xl font-semibold text-dark-950 md:text-5xl">Get early access to exam dates</h2>
-            <p className="mb-8 leading-relaxed text-dark-800">
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-4">Exclusive access</p>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6">Get early access to exam dates</h2>
+            <p className="mb-8 leading-relaxed text-white/55">
               Register with us to be the first to know about opening dates for exams, especially for CMA US and CELPIP candidates. This service is designed to give you a practical edge in your certification journey.
             </p>
-            <ul className="mb-8 space-y-4">
+            <ul className="mb-8 space-y-3">
               {[
                 'First to know about new exam dates',
                 'Exclusive early bird discounts when available',
                 'Priority booking for CMA US & CELPIP',
                 'Study material and checklist updates',
                 'Exam tips and preparation guides',
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm font-medium text-dark-950">
-                  <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-primary-500" /> {item}
+              ].map((benefit, i) => (
+                <li key={i} className="flex items-start gap-3 text-sm text-white/70">
+                  <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-[#FFD000]" /> {benefit}
                 </li>
               ))}
             </ul>
-            <div className="inline-flex items-center gap-2 rounded-lg bg-primary-400/10 px-4 py-2 text-sm font-bold text-primary-600">
-              <Star size={16} fill="currentColor" className="text-primary-600" /> Especially for CMA US & CELPIP candidates
+            <div className="inline-flex items-center gap-2 rounded-xl border border-[#FFD000]/20 bg-[#FFD000]/5 px-4 py-2.5 text-sm font-bold text-[#FFD000]">
+              <Star size={14} fill="currentColor" /> Especially for CMA US & CELPIP candidates
             </div>
           </motion.div>
 
+          {/* Right: form */}
           <motion.div
             initial={{ opacity: 0, x: 12 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45 }}
-            className="rounded-2xl border border-light-300 bg-white p-8 shadow-xl"
+            className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-8"
           >
             <div className="mb-8 flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-400 text-dark-950">
-                <Bell size={24} />
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#FFD000]/10 border border-[#FFD000]/20 text-[#FFD000]">
+                <Bell size={22} />
               </div>
               <div>
-                <h3 className="heading-serif text-2xl font-bold text-dark-950">Register for updates</h3>
-                <p className="text-sm text-dark-800">Join our notification list</p>
+                <h3 className="text-xl font-black text-white">Register for updates</h3>
+                <p className="text-sm text-white/40">Join our notification list</p>
               </div>
             </div>
 
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <label className="mb-1.5 block pl-1 text-sm font-semibold text-dark-950" htmlFor="ea-name">
-                  Full name
-                </label>
-                <input id="ea-name" name="full_name" type="text" required className="input-clean" placeholder="Your full name" autoComplete="name" />
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-white/40" htmlFor="ea-name">Full name</label>
+                <input
+                  id="ea-name" name="full_name" type="text" required
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-[#FFD000]/40 transition-colors"
+                  placeholder="Your full name"
+                  autoComplete="name"
+                />
               </div>
               <div>
-                <label className="mb-1.5 block pl-1 text-sm font-semibold text-dark-950" htmlFor="ea-email">
-                  Email address
-                </label>
-                <input id="ea-email" name="email" type="email" required className="input-clean" placeholder="you@email.com" autoComplete="email" />
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-white/40" htmlFor="ea-email">Email address</label>
+                <input
+                  id="ea-email" name="email" type="email" required
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-[#FFD000]/40 transition-colors"
+                  placeholder="you@email.com"
+                  autoComplete="email"
+                />
               </div>
               <div>
-                <label className="mb-1.5 block pl-1 text-sm font-semibold text-dark-950" htmlFor="ea-phone">
-                  Phone number
-                </label>
-                <input id="ea-phone" name="phone" type="tel" className="input-clean" placeholder="+91 …" autoComplete="tel" />
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-white/40" htmlFor="ea-phone">Phone number</label>
+                <input
+                  id="ea-phone" name="phone" type="tel"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-[#FFD000]/40 transition-colors"
+                  placeholder="+91 …"
+                  autoComplete="tel"
+                />
               </div>
               <div>
-                <label className="mb-1.5 block pl-1 text-sm font-semibold text-dark-950" htmlFor="ea-exam">
-                  Interested exam
-                </label>
-                <select id="ea-exam" name="interested_exam" className="input-clean cursor-pointer" defaultValue="">
-                  <option value="" disabled>
-                    Select an exam
-                  </option>
-                  {EXAMS.map((ex) => (
-                    <option key={ex} value={ex}>
-                      {ex}
-                    </option>
-                  ))}
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-widest text-white/40" htmlFor="ea-exam">Interested exam</label>
+                <select
+                  id="ea-exam" name="interested_exam" defaultValue=""
+                  className="w-full cursor-pointer rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-[#FFD000]/40 transition-colors"
+                >
+                  <option value="" disabled className="bg-[#0f0f0f]">Select an exam</option>
+                  {EXAMS.map((ex) => <option key={ex} value={ex} className="bg-[#0f0f0f]">{ex}</option>)}
                 </select>
-                <p className="mt-1 flex items-center gap-1 pl-1 text-[10px] text-dark-800">
-                  <Sparkles size={10} className="text-primary-500" /> Priority notification exams
-                </p>
               </div>
-              <button type="submit" disabled={pending} className="btn-primary mt-2 h-12 w-full text-base font-bold shadow-sm hover:shadow-lg disabled:opacity-60">
+              <button
+                type="submit"
+                disabled={pending}
+                className="mt-2 h-12 w-full rounded-xl bg-[#FFD000] text-[#0a0a0a] font-black text-sm hover:bg-[#ffe44d] transition-all shadow-[0_8px_24px_rgba(255,208,0,0.15)] disabled:opacity-50"
+              >
                 {pending ? 'Saving…' : 'Register for exclusive updates'}
               </button>
-              <p className="px-4 pt-2 text-center text-[10px] leading-relaxed text-dark-800">
-                By registering, you agree to receive notifications about exam dates and related services. You can unsubscribe at any time.
+              <p className="pt-1 text-center text-[10px] leading-relaxed text-white/25">
+                By registering, you agree to receive notifications about exam dates and related services.
               </p>
             </form>
           </motion.div>

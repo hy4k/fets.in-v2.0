@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MapPin, Phone, Sparkles, X, Mail, Navigation, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Phone, X, Mail, Navigation, ArrowRight } from 'lucide-react';
 import AgentChatOverlay from './components/AgentChatOverlay';
 import CMAMockBookingModal from './components/CMAMockBookingModal';
 import AdminSlotsUpload from './components/AdminSlotsUpload';
@@ -23,6 +23,13 @@ export default function App() {
   const [showAdminUpload, setShowAdminUpload] = useState(false);
   const [toast, setToast] = useState(null);
   const [adminClicks, setAdminClicks] = useState(0);
+
+  // URL-based access: ?admin=true opens admin panel, ?book=cma opens booking
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') === 'true') setShowAdminUpload(true);
+    if (params.get('book') === 'cma') setIsCMABookingOpen(true);
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -51,14 +58,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-light-100 font-sans text-dark-900">
+    <div className="min-h-screen bg-[#0a0a0a] font-sans text-white">
       <SiteHeader onOpenChat={() => setIsChatOpen(true)} onOpenCalicut={() => setActiveLocationModal('calicut')} onOpenKochi={() => setActiveLocationModal('kochi')} />
 
       <main>
         <HeroSection onOpenChat={() => setIsChatOpen(true)} />
         <MockExamsSection
           onBookCma={() => setIsCMABookingOpen(true)}
-          onBookOther={() => showToast('Call +91 9605686000 or use the calendar to book this mock.')}
+          onBookOther={() => showToast('Call +91 9605686000 or use the calendar to book this exam.')}
         />
         <CalendarSection />
         <StudentResourcesSection />
@@ -85,7 +92,7 @@ export default function App() {
       {!isChatOpen && (
         <button type="button" className="fab-ai group" onClick={() => setIsChatOpen(true)} title="Ask EXAM ASSIST">
           <div className="fab-ai-blob" />
-          <Sparkles size={24} className="text-primary-400 transition-transform group-hover:scale-110" />
+          <FabWaveIcon />
         </button>
       )}
 
@@ -180,7 +187,7 @@ function LocationModal({ title, address, phone, reach, mapUrl, onClose, onAskAi 
 
                  <div className="flex flex-col gap-3 py-4">
                     <button onClick={onAskAi} className="h-14 w-full rounded-2xl bg-[#FFD000] text-dark-950 font-black text-xs uppercase tracking-widest hover:bg-[#ffe44d] transition-all flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(255,208,0,0.15)] group">
-                       <Sparkles size={16} className="group-hover:animate-spin" /> Message Live Assistant
+                       <FabWaveIcon size={16} /> Message Live Assistant
                     </button>
                     <a href="mailto:mithun@fets.in" className="h-14 w-full rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2 shadow-xl">
                        <Mail size={16} className="text-white/40" /> Email Support
@@ -286,18 +293,31 @@ const Bus = ({ size, className }) => (
 );
 
 const Plane = ({ size, className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2.5" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
     className={className}
   >
     <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.7 5.2c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z" />
   </svg>
 );
+
+function FabWaveIcon({ size }) {
+  const w = size || 22;
+  return (
+    <svg width={w} height={Math.round(w * 0.82)} viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="6" width="3" height="6" rx="1.5" fill="currentColor" />
+      <rect x="4.75" y="2" width="3" height="14" rx="1.5" fill="currentColor" />
+      <rect x="9.5" y="0" width="3" height="18" rx="1.5" fill="currentColor" />
+      <rect x="14.25" y="2" width="3" height="14" rx="1.5" fill="currentColor" />
+      <rect x="19" y="6" width="3" height="6" rx="1.5" fill="currentColor" />
+    </svg>
+  );
+}

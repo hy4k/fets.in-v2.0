@@ -1,127 +1,193 @@
 import { useState } from 'react';
-import { Menu, X, MapPin, Phone, Sparkles } from 'lucide-react';
+import { Menu, X, MapPin, Phone } from 'lucide-react';
 
-const NAV = [
-  { href: '#mock-exams', label: 'Mock exams' },
+const NAV_MOBILE = [
+  { href: '#mock-exams', label: 'Exam Test Drive' },
   { href: '#calendar', label: 'Calendar' },
   { href: '#student-resources', label: 'Student resources' },
   { href: '#faq', label: 'FAQ' },
-  { href: '#early-access', label: 'Updates' },
+  { href: '#early-access', label: 'Early Access' },
 ];
+
+function AiWaveIcon({ size = 20 }) {
+  return (
+    <svg width={size} height={Math.round(size * 0.82)} viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="6" width="3" height="6" rx="1.5" fill="currentColor" style={{ animation: 'navWave1 1.2s ease-in-out infinite' }} />
+      <rect x="4.75" y="2" width="3" height="14" rx="1.5" fill="currentColor" style={{ animation: 'navWave2 1.2s ease-in-out 0.15s infinite' }} />
+      <rect x="9.5" y="0" width="3" height="18" rx="1.5" fill="currentColor" style={{ animation: 'navWave3 1.2s ease-in-out 0.3s infinite' }} />
+      <rect x="14.25" y="2" width="3" height="14" rx="1.5" fill="currentColor" style={{ animation: 'navWave2 1.2s ease-in-out 0.45s infinite' }} />
+      <rect x="19" y="6" width="3" height="6" rx="1.5" fill="currentColor" style={{ animation: 'navWave1 1.2s ease-in-out 0.6s infinite' }} />
+    </svg>
+  );
+}
 
 export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi }) {
   const [open, setOpen] = useState(false);
-
   const close = () => setOpen(false);
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 border-b border-light-300 bg-light-50/95 backdrop-blur-md shadow-sm">
+      <style>{`
+        @keyframes navWave1 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.4)} }
+        @keyframes navWave2 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.5)} }
+        @keyframes navWave3 { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.3)} }
+      `}</style>
+
+      <header className="fixed top-0 left-0 right-0 z-40 border-b border-white/[0.08] bg-[#0a0a0a]/95 backdrop-blur-md">
         <div className="container-custom flex h-16 md:h-20 items-center justify-between gap-3">
+
+          {/* Logo — just "TS" wordmark */}
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-light-300 bg-white text-dark-900 md:hidden"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white lg:hidden"
               aria-expanded={open}
               aria-controls="mobile-nav"
               onClick={() => setOpen(true)}
             >
-              <Menu size={22} strokeWidth={2} />
+              <Menu size={20} strokeWidth={2} />
             </button>
             <a
               href="#top"
-              className="truncate font-bold tracking-tight text-dark-950"
+              className="font-black tracking-tight text-white text-lg leading-none"
               onClick={close}
             >
-              FETS
+              TS
             </a>
           </div>
 
-          <nav className="hidden flex-wrap items-center justify-between font-semibold text-sm w-full ml-6 lg:flex" aria-label="Primary">
+          {/* Desktop nav */}
+          <nav className="hidden flex-wrap items-center justify-between w-full ml-8 lg:flex" aria-label="Primary">
+
             {/* Left: Locations */}
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { onOpenCalicut(); }} className="btn-nav text-[16px] h-12 px-6 shadow-sm gap-2">
-                <MapPin size={18} /> Calicut
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={onOpenCalicut}
+                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-white/10 bg-white/5 text-white/80 text-sm font-semibold hover:bg-white/10 hover:text-white transition-all"
+              >
+                <MapPin size={14} className="text-[#FFD000]" /> Calicut
               </button>
-              <button type="button" onClick={() => { onOpenKochi(); }} className="btn-nav text-[16px] h-12 px-6 shadow-sm gap-2">
-                <MapPin size={18} /> Kochi
+              <button
+                type="button"
+                onClick={onOpenKochi}
+                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-white/10 bg-white/5 text-white/80 text-sm font-semibold hover:bg-white/10 hover:text-white transition-all"
+              >
+                <MapPin size={14} className="text-[#FFD000]" /> Kochi
               </button>
             </div>
 
-            {/* Middle: Links */}
-            <div className="flex gap-4">
-              <a href="#calendar" className="btn-nav text-[16px] h-12 px-6 shadow-sm bg-transparent border-0 hover:bg-light-200 shadow-none">
-                Check Availability
-              </a>
-              <a href="#early-access" className="btn-nav text-[16px] h-12 px-6 shadow-sm bg-transparent border-0 hover:bg-light-200 shadow-none">
+            {/* Centre: Early Access + Exam Test Drive */}
+            <div className="flex gap-2">
+              <a
+                href="#early-access"
+                className="inline-flex items-center h-10 px-4 rounded-lg text-white/60 text-sm font-semibold hover:text-white hover:bg-white/5 transition-all"
+              >
                 Early Access
               </a>
+              <a
+                href="#mock-exams"
+                className="inline-flex items-center h-10 px-5 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-sm font-black hover:bg-[#ffe44d] transition-all shadow-[0_4px_16px_rgba(255,208,0,0.2)]"
+              >
+                Exam Test Drive
+              </a>
             </div>
 
-            {/* Right: Mock Exam & AI/Contact Icons */}
-            <div className="flex items-center gap-4">
-              <a href="#mock-exams" className="btn-nav text-[16px] h-12 px-6 shadow-sm !bg-dark-900 !text-[#FFD000] hover:!bg-dark-800 border-0">
-                Mock Exams
+            {/* Right: AI + Phone */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onOpenChat}
+                className="group relative flex h-10 items-center gap-2.5 overflow-hidden rounded-xl border border-white/10 bg-white/5 px-4 text-[#FFD000] transition-all hover:border-[#FFD000]/30 hover:bg-white/10"
+                title="Ask EXAM ASSIST"
+              >
+                <AiWaveIcon size={18} />
+                <span className="text-[12px] font-black uppercase tracking-widest text-[#FFD000]">Exam AI</span>
+              </button>
+              <a
+                href="tel:+919605686000"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Call FETS"
+              >
+                <Phone size={18} />
               </a>
-              <div className="flex gap-2">
-                <button type="button" className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-400 text-dark-950 shadow-sm transition-transform hover:scale-105" onClick={() => onOpenChat()}>
-                  <Sparkles size={20} />
-                </button>
-                <a href="tel:+919605686000" className="flex h-12 w-12 items-center justify-center rounded-xl bg-light-300 text-dark-950 transition-colors hover:bg-light-400">
-                  <Phone size={20} />
-                </a>
-              </div>
             </div>
           </nav>
 
-          <div className="flex items-center gap-2 md:hidden">
+          {/* Mobile: AI + Phone */}
+          <div className="flex items-center gap-2 lg:hidden">
             <button
               type="button"
-              onClick={() => onOpenChat()}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-400 text-dark-900"
+              onClick={onOpenChat}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-[#FFD000]"
+              aria-label="Ask AI"
             >
-              <Sparkles size={20} />
+              <AiWaveIcon size={18} />
             </button>
             <a
               href="tel:+919605686000"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-light-300 bg-white text-dark-900"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/70"
               aria-label="Call FETS"
             >
-              <Phone size={20} />
+              <Phone size={18} />
             </a>
           </div>
         </div>
       </header>
 
+      {/* Mobile sheet */}
       {open && (
         <>
-          <div className="nav-sheet-backdrop" aria-hidden onClick={close} />
-          <div id="mobile-nav" className="nav-sheet" role="dialog" aria-modal="true" aria-label="Menu">
-            <div className="mb-4 flex items-center justify-between border-b border-light-300 pb-3">
-              <span className="font-bold text-dark-950">Menu</span>
+          <div className="fixed inset-0 z-[45] bg-black/60 backdrop-blur-sm" aria-hidden onClick={close} />
+          <div
+            id="mobile-nav"
+            className="fixed top-0 left-0 z-[46] h-full w-72 bg-[#0f0f0f] border-r border-white/10 p-5 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+          >
+            <div className="mb-6 flex items-center justify-between">
+              <span className="font-black text-white text-lg">TS</span>
               <button
                 type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-light-300 bg-light-100"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white/60"
                 onClick={close}
                 aria-label="Close menu"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
-            <div className="flex flex-col gap-2">
-              <button type="button" className="rounded-lg border border-light-300 bg-white px-4 py-3 text-left font-semibold text-dark-900" onClick={() => { onOpenCalicut(); close(); }}>
-                <MapPin className="mr-2 inline" size={16} /> Calicut centre
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 hover:text-white"
+                onClick={() => { onOpenCalicut(); close(); }}
+              >
+                <MapPin size={15} className="text-[#FFD000]" /> Calicut centre
               </button>
-              <button type="button" className="rounded-lg border border-light-300 bg-white px-4 py-3 text-left font-semibold text-dark-900" onClick={() => { onOpenKochi(); close(); }}>
-                <MapPin className="mr-2 inline" size={16} /> Kochi centre
+              <button
+                type="button"
+                className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/5 px-4 py-3 text-left text-sm font-semibold text-white/80 hover:text-white"
+                onClick={() => { onOpenKochi(); close(); }}
+              >
+                <MapPin size={15} className="text-[#FFD000]" /> Kochi centre
               </button>
-              {NAV.map((item) => (
-                <a key={item.href} href={item.href} className="rounded-lg border border-light-300 bg-white px-4 py-3 font-semibold text-dark-900" onClick={close}>
+              {NAV_MOBILE.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-lg border border-white/8 bg-white/5 px-4 py-3 text-sm font-semibold text-white/80 hover:text-white"
+                  onClick={close}
+                >
                   {item.label}
                 </a>
               ))}
-              <a href="tel:+919605686000" className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-dark-950 py-3 font-bold text-primary-400" onClick={close}>
-                <Phone size={18} /> Call +91 9605686000
+              <a
+                href="tel:+919605686000"
+                className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-[#FFD000] py-3 text-sm font-black text-[#0a0a0a]"
+                onClick={close}
+              >
+                <Phone size={16} /> Call +91 9605686000
               </a>
             </div>
           </div>

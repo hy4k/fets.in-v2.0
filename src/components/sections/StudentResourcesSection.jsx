@@ -19,7 +19,7 @@ export default function StudentResourcesSection() {
   );
 
   return (
-    <section id="student-resources" className="section-padding border-t border-light-200 bg-light-100">
+    <section id="student-resources" className="section-padding bg-[#0f0f0f] border-t border-white/[0.06]">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -27,23 +27,24 @@ export default function StudentResourcesSection() {
           viewport={{ once: true }}
           className="mx-auto mb-12 max-w-3xl text-center"
         >
-          <p className="section-label mb-3">Student resources</p>
-          <h2 className="section-title mb-4">Exam prep that respects your time</h2>
-          <p className="section-lead mx-auto">
+          <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#FFD000] mb-3">Student resources</p>
+          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight">Exam prep that respects your time</h2>
+          <p className="mt-4 text-white/50 max-w-xl mx-auto leading-relaxed">
             Tips, week-by-week timelines, and printable checklists—curated for candidates sitting professional and English proficiency exams at our centres.
           </p>
         </motion.div>
 
+        {/* Tag filters */}
         <div className="mb-10 flex flex-wrap justify-center gap-2">
           {resourceTags.map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTag(t)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-all ${
                 tag === t
-                  ? 'border-accent-500 bg-accent-500 text-white'
-                  : 'border-light-300 bg-white text-dark-800 hover:border-accent-400'
+                  ? 'border-[#FFD000] bg-[#FFD000] text-[#0a0a0a]'
+                  : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/20'
               }`}
             >
               {t}
@@ -51,21 +52,17 @@ export default function StudentResourcesSection() {
           ))}
         </div>
 
-        <div className="grid gap-12 lg:grid-cols-3">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-1"
-          >
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Exam tips */}
+          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="mb-4 flex items-center gap-2">
-              <BookOpen className="text-accent-500" size={22} />
-              <h3 className="heading-serif text-xl font-semibold text-dark-950">Exam tips</h3>
+              <BookOpen className="text-[#FFD000]" size={20} />
+              <h3 className="text-lg font-black text-white">Exam tips</h3>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <AnimatePresence mode="popLayout">
                 {tips.length === 0 ? (
-                  <p className="text-sm text-dark-800">No tips for this filter—try &quot;All&quot;.</p>
+                  <p className="text-sm text-white/40">No tips for this filter—try "All".</p>
                 ) : (
                   tips.map((tip) => (
                     <motion.div
@@ -74,17 +71,17 @@ export default function StudentResourcesSection() {
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0 }}
-                      className="overflow-hidden rounded-xl border border-light-300 bg-white shadow-sm"
+                      className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.04]"
                     >
                       <button
                         type="button"
                         onClick={() => setExpanded(expanded === tip.id ? null : tip.id)}
                         className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left"
                       >
-                        <span className="font-semibold text-dark-950">{tip.title}</span>
+                        <span className="font-semibold text-white/90 text-sm">{tip.title}</span>
                         <ChevronDown
-                          size={18}
-                          className={`shrink-0 text-dark-800 transition-transform ${expanded === tip.id ? 'rotate-180' : ''}`}
+                          size={16}
+                          className={`shrink-0 text-white/30 transition-transform ${expanded === tip.id ? 'rotate-180' : ''}`}
                         />
                       </button>
                       <AnimatePresence>
@@ -93,7 +90,7 @@ export default function StudentResourcesSection() {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="border-t border-light-200 px-4 pb-4 text-sm text-dark-800"
+                            className="border-t border-white/[0.06] px-4 pb-4 text-sm text-white/50"
                           >
                             <p className="pt-3">{tip.summary}</p>
                             {tip.body && <p className="mt-2 leading-relaxed">{tip.body}</p>}
@@ -107,29 +104,25 @@ export default function StudentResourcesSection() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-1"
-          >
+          {/* Timelines */}
+          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="mb-4 flex items-center gap-2">
-              <CalendarRange className="text-accent-500" size={22} />
-              <h3 className="heading-serif text-xl font-semibold text-dark-950">Timelines</h3>
+              <CalendarRange className="text-[#FFD000]" size={20} />
+              <h3 className="text-lg font-black text-white">Timelines</h3>
             </div>
             <div className="space-y-4">
               {timelines.length === 0 ? (
-                <p className="text-sm text-dark-800">No timelines for this filter.</p>
+                <p className="text-sm text-white/40">No timelines for this filter.</p>
               ) : (
                 timelines.map((tl) => (
-                  <div key={tl.id} className="rounded-xl border border-light-300 bg-white p-4 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-wide text-accent-600">{tl.examFocus}</p>
-                    <h4 className="heading-serif mt-1 text-lg font-semibold text-dark-950">{tl.title}</h4>
-                    <ol className="mt-3 space-y-2 border-l-2 border-primary-400/50 pl-4">
+                  <div key={tl.id} className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#FFD000]">{tl.examFocus}</p>
+                    <h4 className="mt-1 text-base font-bold text-white">{tl.title}</h4>
+                    <ol className="mt-3 space-y-2 border-l-2 border-[#FFD000]/30 pl-4">
                       {tl.steps.map((s, i) => (
-                        <li key={i} className="text-sm text-dark-800">
-                          <span className="font-semibold text-dark-950">{s.title}</span>
-                          <span className="block text-dark-800/90">{s.detail}</span>
+                        <li key={i} className="text-sm text-white/60">
+                          <span className="font-semibold text-white/90">{s.title}</span>
+                          <span className="block text-white/50">{s.detail}</span>
                         </li>
                       ))}
                     </ol>
@@ -139,31 +132,27 @@ export default function StudentResourcesSection() {
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="lg:col-span-1"
-          >
+          {/* Downloads */}
+          <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="mb-4 flex items-center gap-2">
-              <Download className="text-accent-500" size={22} />
-              <h3 className="heading-serif text-xl font-semibold text-dark-950">Downloads</h3>
+              <Download className="text-[#FFD000]" size={20} />
+              <h3 className="text-lg font-black text-white">Downloads</h3>
             </div>
             <div className="space-y-3">
               {files.length === 0 ? (
-                <p className="text-sm text-dark-800">No downloads for this filter.</p>
+                <p className="text-sm text-white/40">No downloads for this filter.</p>
               ) : (
                 files.map((f) => (
                   <a
                     key={f.id}
                     href={f.href}
                     download
-                    className="block rounded-xl border border-light-300 bg-white p-4 shadow-sm transition-all hover:border-accent-400 hover:shadow-md"
+                    className="block rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 transition-all hover:border-[#FFD000]/25 hover:bg-white/[0.06]"
                   >
-                    <span className="font-semibold text-dark-950">{f.title}</span>
-                    <p className="mt-1 text-sm text-dark-800">{f.blurb}</p>
-                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-accent-600">
-                      <Download size={14} /> Get file
+                    <span className="font-semibold text-white/90">{f.title}</span>
+                    <p className="mt-1 text-sm text-white/50">{f.blurb}</p>
+                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#FFD000]">
+                      <Download size={12} /> Get file
                     </span>
                   </a>
                 ))
