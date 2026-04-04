@@ -8,7 +8,7 @@ import {
 import * as XLSX from 'xlsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-const ADMIN_PASSWORD = 'fets2026';
+const ADMIN_PASSWORD = 'fets@in';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -1236,7 +1236,7 @@ export default function AdminSlotsUpload({ onClose }) {
               {authError && <p className="text-red-500 text-xs mb-3 text-center">{authError}</p>}
               <button onClick={authenticate} className="btn-primary w-full h-11">Login</button>
               <p className="text-center text-[10px] text-dark-600 mt-4">
-                Default password: <span className="font-mono">fets2026</span>
+                Default password: <span className="font-mono">fets@in</span>
               </p>
             </div>
           ) : (
