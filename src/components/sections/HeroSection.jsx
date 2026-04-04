@@ -24,10 +24,10 @@ export default function HeroSection() {
           transition={{ delay: 0.1 }}
           className="flex flex-col items-center"
         >
-          <h1 className="text-4xl md:text-7xl font-black text-white tracking-normal leading-none mb-4">
-            FORUN EDUCATIONAL <br />
+          <h1 className="text-4xl md:text-7xl font-black text-white tracking-normal leading-none mb-4" style={{ wordSpacing: '0.25em' }}>
+            FORUN&nbsp; TESTING&nbsp; &amp;&nbsp; EDUCATIONAL <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD000] via-[#E6AC00] to-[#CC9900]">
-              &amp; TESTING SERVICES
+              SERVICES
             </span>
           </h1>
           <div className="h-1.5 w-24 bg-[#FFD000] rounded-full shadow-[0_0_20px_rgba(255,208,0,0.4)]" />
