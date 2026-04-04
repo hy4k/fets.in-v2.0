@@ -1,7 +1,8 @@
 -- ─── Institute Schema Additions ───────────────────────────────────────────────
 -- Run this in your Supabase SQL editor to enable the institute portal.
 
--- Add contact_name column if not exists
+-- Add missing columns (safe to re-run — IF NOT EXISTS)
+ALTER TABLE coaching_centers ADD COLUMN IF NOT EXISTS email        TEXT;
 ALTER TABLE coaching_centers ADD COLUMN IF NOT EXISTS contact_name TEXT;
 
 -- Allow public self-registration of institutes

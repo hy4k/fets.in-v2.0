@@ -3,7 +3,7 @@ import {
   X, Upload, FileSpreadsheet, CheckCircle, AlertCircle,
   Loader2, Eye, EyeOff, Trash2, Table2, RefreshCw, Save,
   ChevronDown, Filter, Edit3, Users, BookOpen, Bell, Download,
-  Building2, Copy, ToggleLeft, ToggleRight, Plus
+  Building2, Copy, ToggleLeft, ToggleRight, Plus, Trophy
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
@@ -1023,6 +1023,152 @@ function InstitutesTab() {
   );
 }
 
+// ─── Results Tab ─────────────────────────────────────────────────────────────
+
+function ResultsTab() {
+  const [results, setResults]   = useState([]);
+  const [loading, setLoading]   = useState(false);
+  const [filter, setFilter]     = useState('all');
+  const [search, setSearch]     = useState('');
+
+  const fetchResults = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('exam_results')
+      .select('*, coaching_centers(name, city)')
+      .order('uploaded_at', { ascending: false });
+    setResults(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchResults(); }, [fetchResults]);
+
+  const filtered = results.filter(r => {
+    const matchStatus = filter === 'all' || r.result_status === filter;
+    const q = search.toLowerCase();
+    const matchSearch = !q ||
+      (r.student_name || '').toLowerCase().includes(q) ||
+      (r.coaching_centers?.name || '').toLowerCase().includes(q) ||
+      (r.exam_part || '').toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+
+  const exportCSV = () => {
+    const header = ['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result', 'Institute', 'City', 'Uploaded At'];
+    const rows = filtered.map(r => [
+      r.student_name,
+      r.exam_part || '',
+      r.exam_date || '',
+      r.score ?? '',
+      r.result_status,
+      r.coaching_centers?.name || '',
+      r.coaching_centers?.city || '',
+      r.uploaded_at ? new Date(r.uploaded_at).toLocaleString('en-IN') : '',
+    ]);
+    const csv = [header, ...rows].map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `FETS_Results_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  const statusBadge = (s) => {
+    if (s === 'pass')    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">PASS</span>;
+    if (s === 'fail')    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-700">FAIL</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-600">PENDING</span>;
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Controls */}
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search student, institute, exam part…"
+          className="input-clean flex-1 min-w-[200px] text-sm"
+        />
+        <div className="flex gap-1 bg-light-100 rounded-lg p-1">
+          {['all', 'pass', 'fail', 'pending'].map(f => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded text-xs font-bold capitalize transition-all ${
+                filter === f ? 'bg-dark-950 text-white shadow-sm' : 'text-dark-700 hover:text-dark-950'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={exportCSV}
+          disabled={!filtered.length}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-950 text-white text-xs font-bold hover:bg-dark-900 transition-all disabled:opacity-40"
+        >
+          <Download size={13}/> Export CSV
+        </button>
+        <button onClick={fetchResults} className="p-2 text-dark-600 hover:text-dark-950 transition-colors">
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>
+        </button>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total', value: results.length, color: 'bg-blue-50 text-blue-700' },
+          { label: 'Passed', value: results.filter(r => r.result_status === 'pass').length, color: 'bg-emerald-50 text-emerald-700' },
+          { label: 'Failed', value: results.filter(r => r.result_status === 'fail').length, color: 'bg-red-50 text-red-700' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className={`rounded-xl p-3 ${color} border border-current/10`}>
+            <p className="text-xs font-semibold opacity-70">{label}</p>
+            <p className="text-2xl font-black">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12"><Loader2 size={20} className="animate-spin text-dark-600"/></div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-dark-600 text-sm">
+          {results.length === 0 ? 'No results uploaded yet. Institutes can upload results from their dashboard.' : 'No results match your filters.'}
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-light-200">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-light-100 border-b border-light-200">
+                {['Student Name', 'Exam Part', 'Exam Date', 'Score', 'Result', 'Institute', 'Uploaded'].map(h => (
+                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-black text-dark-700 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-light-100">
+              {filtered.map((r) => (
+                <tr key={r.id} className="hover:bg-light-50 transition-colors">
+                  <td className="px-3 py-2.5 font-semibold text-dark-950 whitespace-nowrap">{r.student_name}</td>
+                  <td className="px-3 py-2.5 text-dark-700">{r.exam_part || '—'}</td>
+                  <td className="px-3 py-2.5 text-dark-700 whitespace-nowrap">{r.exam_date ? new Date(r.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+                  <td className="px-3 py-2.5 text-dark-700 text-center font-mono">{r.score ?? '—'}</td>
+                  <td className="px-3 py-2.5">{statusBadge(r.result_status)}</td>
+                  <td className="px-3 py-2.5 text-dark-700">
+                    <span className="font-medium">{r.coaching_centers?.name || '—'}</span>
+                    {r.coaching_centers?.city && <span className="text-dark-500 text-xs ml-1">({r.coaching_centers.city})</span>}
+                  </td>
+                  <td className="px-3 py-2.5 text-dark-500 text-xs whitespace-nowrap">{r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Root Component ───────────────────────────────────────────────────────────
 
 const TABS = [
@@ -1030,6 +1176,7 @@ const TABS = [
   { id: 'cma',        label: 'CMA Requests',   icon: BookOpen,  count: true },
   { id: 'bookings',   label: 'Slot Bookings',  icon: Users,     count: true },
   { id: 'institutes', label: 'Institutes',     icon: Building2, count: true },
+  { id: 'results',    label: 'Results',        icon: Trophy,    count: true },
   { id: 'manage',     label: 'Manage Seats',   icon: Edit3 },
   { id: 'upload',     label: 'Upload Excel',   icon: Table2 },
 ];
@@ -1126,6 +1273,7 @@ export default function AdminSlotsUpload({ onClose }) {
                 {tab === 'cma'        && <CmaRequestsTab />}
                 {tab === 'bookings'   && <BookingsTab />}
                 {tab === 'institutes' && <InstitutesTab />}
+                {tab === 'results'    && <ResultsTab />}
                 {tab === 'manage'     && <ManageTab />}
                 {tab === 'upload'     && <UploadTab />}
               </div>
