@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   X, Upload, FileSpreadsheet, CheckCircle, AlertCircle,
   Loader2, Eye, EyeOff, Trash2, Table2, RefreshCw, Save,
-  ChevronDown, Filter, Edit3, Users, BookOpen, Bell, Download
+  ChevronDown, Filter, Edit3, Users, BookOpen, Bell, Download,
+  Building2, Copy, ToggleLeft, ToggleRight, Plus
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'fets@admin2024';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'fets2024';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -801,14 +802,236 @@ function CmaRequestsTab() {
   );
 }
 
+// ─── Institutes Tab ───────────────────────────────────────────────────────────
+
+function InstitutesTab() {
+  const [centers, setCenters] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [successCode, setSuccessCode] = useState('');
+  const [bookingCounts, setBookingCounts] = useState({});
+  const [revealedCodes, setRevealedCodes] = useState({});
+
+  // Form state
+  const [name, setName] = useState('');
+  const [city, setCity] = useState('Calicut');
+  const [contactPerson, setContactPerson] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+
+  const fetchCenters = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('coaching_centers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    const rows = data || [];
+    setCenters(rows);
+    // Fetch booking counts
+    const counts = {};
+    await Promise.all(rows.map(async (c) => {
+      const { count } = await supabase
+        .from('cma_mock_bookings')
+        .select('id', { count: 'exact', head: true })
+        .eq('coaching_center_id', c.id);
+      counts[c.id] = count || 0;
+    }));
+    setBookingCounts(counts);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchCenters(); }, [fetchCenters]);
+
+  const generateCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * 26)];
+    return `FETS-${code}-2026`;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !contactPerson || !phone || !email) {
+      setFormError('All fields except description are required.');
+      return;
+    }
+    setSubmitting(true);
+    setFormError('');
+    const code = generateCode();
+    try {
+      const { error } = await supabase.from('coaching_centers').insert({
+        name, city, contact: phone, email,
+        contact_name: contactPerson,
+        access_code: code,
+        is_active: true,
+      });
+      if (error) throw error;
+      setSuccessCode(code);
+      setName(''); setCity('Calicut'); setContactPerson(''); setPhone(''); setEmail('');
+      setShowForm(false);
+      fetchCenters();
+    } catch (err) {
+      setFormError(err.message || 'Failed to add institute.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleActive = async (center) => {
+    if (!supabase) return;
+    await supabase.from('coaching_centers').update({ is_active: !center.is_active }).eq('id', center.id);
+    fetchCenters();
+  };
+
+  const copyCode = (code) => {
+    navigator.clipboard.writeText(code).catch(() => {});
+  };
+
+  return (
+    <div className="space-y-4">
+      {successCode && (
+        <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-green-50 border border-green-200">
+          <div>
+            <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Institute Added — Share this Access Code</p>
+            <p className="font-mono font-black text-green-800 text-xl tracking-widest">{successCode}</p>
+          </div>
+          <button onClick={() => { copyCode(successCode); setSuccessCode(''); }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg bg-green-700 text-white hover:bg-green-800">
+            <Copy size={12}/> Copy & Dismiss
+          </button>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-dark-950">{centers.length} partner institutes</p>
+        <div className="flex gap-2">
+          <button onClick={fetchCenters} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
+          </button>
+          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800">
+            <Plus size={12}/> Add Institute
+          </button>
+        </div>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="border border-light-200 rounded-xl p-5 bg-light-50 space-y-4">
+          <h4 className="font-bold text-dark-950 text-sm">Add New Institute</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Institute Name *</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Institute name" className="input-clean text-sm" required />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">City *</label>
+              <select value={city} onChange={e => setCity(e.target.value)} className="input-clean text-sm">
+                <option>Calicut</option>
+                <option>Kochi</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Contact Person *</label>
+              <input value={contactPerson} onChange={e => setContactPerson(e.target.value)} placeholder="Contact person name" className="input-clean text-sm" required />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Phone *</label>
+              <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="input-clean text-sm" required />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Email *</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="institute@email.com" className="input-clean text-sm" required />
+            </div>
+          </div>
+          {formError && <p className="text-red-500 text-xs">{formError}</p>}
+          <div className="flex gap-2">
+            <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-1.5 text-sm">
+              {submitting ? <Loader2 size={13} className="animate-spin"/> : <Plus size={13}/>} Create Institute
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} className="text-xs font-bold text-dark-700 hover:text-dark-950 px-3 py-1.5 rounded-lg border border-light-300 bg-white">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-primary-500"/></div>
+      ) : centers.length === 0 ? (
+        <p className="text-center py-10 text-sm text-dark-800">No institutes added yet.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-light-200">
+          <table className="w-full text-xs min-w-[700px]">
+            <thead className="bg-dark-950 border-b border-light-200">
+              <tr>
+                {['Name', 'City', 'Access Code', 'Contact', 'Phone', 'Status', '# Bookings', 'Actions'].map(h => (
+                  <th key={h} className="px-3 py-2.5 text-left font-bold text-white whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {centers.map(c => (
+                <tr key={c.id} className="border-t border-light-100 hover:bg-light-50">
+                  <td className="px-3 py-2.5 font-semibold text-dark-950 max-w-[160px] truncate">{c.name}</td>
+                  <td className="px-3 py-2.5 text-dark-800">{c.city || '—'}</td>
+                  <td className="px-3 py-2.5">
+                    <span
+                      className="font-mono cursor-pointer select-none"
+                      title="Hover to reveal"
+                      onMouseEnter={() => setRevealedCodes(p => ({ ...p, [c.id]: true }))}
+                      onMouseLeave={() => setRevealedCodes(p => ({ ...p, [c.id]: false }))}
+                    >
+                      {revealedCodes[c.id] ? c.access_code : '••••••••••••'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-dark-800">{c.contact_name || c.contact || '—'}</td>
+                  <td className="px-3 py-2.5 text-dark-800">{c.contact || '—'}</td>
+                  <td className="px-3 py-2.5">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                      {c.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 text-dark-800 text-center">{bookingCounts[c.id] ?? '—'}</td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => copyCode(c.access_code)}
+                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded bg-dark-950 text-primary-400 hover:bg-dark-800"
+                        title="Copy code"
+                      >
+                        <Copy size={10}/> Copy
+                      </button>
+                      <button
+                        onClick={() => toggleActive(c)}
+                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded border border-light-300 bg-white hover:bg-light-100 text-dark-700"
+                        title={c.is_active ? 'Deactivate' : 'Activate'}
+                      >
+                        {c.is_active ? <ToggleRight size={12} className="text-green-600"/> : <ToggleLeft size={12} className="text-dark-600"/>}
+                        {c.is_active ? 'Deactivate' : 'Activate'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Root Component ───────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'leads',    label: 'Leads',          icon: Bell,     count: true },
-  { id: 'cma',      label: 'CMA Requests',   icon: BookOpen, count: true },
-  { id: 'bookings', label: 'Slot Bookings',  icon: Users,    count: true },
-  { id: 'manage',   label: 'Manage Seats',   icon: Edit3 },
-  { id: 'upload',   label: 'Upload Excel',   icon: Table2 },
+  { id: 'leads',      label: 'Leads',          icon: Bell,      count: true },
+  { id: 'cma',        label: 'CMA Requests',   icon: BookOpen,  count: true },
+  { id: 'bookings',   label: 'Slot Bookings',  icon: Users,     count: true },
+  { id: 'institutes', label: 'Institutes',     icon: Building2, count: true },
+  { id: 'manage',     label: 'Manage Seats',   icon: Edit3 },
+  { id: 'upload',     label: 'Upload Excel',   icon: Table2 },
 ];
 
 export default function AdminSlotsUpload({ onClose }) {
@@ -868,7 +1091,7 @@ export default function AdminSlotsUpload({ onClose }) {
               {authError && <p className="text-red-500 text-xs mb-3 text-center">{authError}</p>}
               <button onClick={authenticate} className="btn-primary w-full h-11">Login</button>
               <p className="text-center text-[10px] text-dark-600 mt-4">
-                Default: <span className="font-mono">fets@admin2024</span> — set <span className="font-mono">VITE_ADMIN_PASSWORD</span> in .env to change
+                Default: <span className="font-mono">fets2024</span> — set <span className="font-mono">VITE_ADMIN_PASSWORD</span> in .env to change
               </p>
             </div>
           ) : (
@@ -899,11 +1122,12 @@ export default function AdminSlotsUpload({ onClose }) {
 
               {/* Tab content */}
               <div className="flex-1 overflow-y-auto p-6">
-                {tab === 'leads'    && <LeadsTab />}
-                {tab === 'cma'      && <CmaRequestsTab />}
-                {tab === 'bookings' && <BookingsTab />}
-                {tab === 'manage'   && <ManageTab />}
-                {tab === 'upload'   && <UploadTab />}
+                {tab === 'leads'      && <LeadsTab />}
+                {tab === 'cma'        && <CmaRequestsTab />}
+                {tab === 'bookings'   && <BookingsTab />}
+                {tab === 'institutes' && <InstitutesTab />}
+                {tab === 'manage'     && <ManageTab />}
+                {tab === 'upload'     && <UploadTab />}
               </div>
             </div>
           )}

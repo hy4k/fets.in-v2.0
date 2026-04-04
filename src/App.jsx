@@ -7,6 +7,7 @@ import AdminSlotsUpload from './components/AdminSlotsUpload';
 import ChatPanels from './components/ChatPanels';
 import LoginModal from './components/LoginModal';
 import CandidateDashboard from './pages/CandidateDashboard';
+import InstituteDashboard from './pages/InstituteDashboard';
 import SiteHeader from './components/sections/SiteHeader';
 import HeroSection from './components/sections/HeroSection';
 import MockExamsSection from './components/sections/MockExamsSection';
@@ -29,12 +30,14 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showInstituteDashboard, setShowInstituteDashboard] = useState(false);
 
-  // URL-based access: ?admin=true opens admin panel, ?book=cma opens booking
+  // URL-based access: ?admin=true opens admin panel, ?book=cma opens booking, ?institute=true opens institute portal
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true') setShowAdminUpload(true);
     if (params.get('book') === 'cma') setIsCMABookingOpen(true);
+    if (params.get('institute') === 'true') setShowInstituteDashboard(true);
   }, []);
 
   // Auth session
@@ -132,6 +135,11 @@ export default function App() {
           onLogout={handleLogout}
           onOpenChat={() => { setShowDashboard(false); setIsChatOpen(true); }}
         />
+      )}
+
+      {/* Institute dashboard overlay */}
+      {showInstituteDashboard && (
+        <InstituteDashboard onClose={() => setShowInstituteDashboard(false)} />
       )}
 
       {toast && (
