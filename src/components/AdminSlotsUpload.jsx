@@ -8,7 +8,7 @@ import {
 import * as XLSX from 'xlsx';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'fets2024';
+const ADMIN_PASSWORD = 'fets2026';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -846,10 +846,8 @@ function InstitutesTab() {
   useEffect(() => { fetchCenters(); }, [fetchCenters]);
 
   const generateCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    let code = '';
-    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * 26)];
-    return `FETS-${code}-2026`;
+    const firstWord = name.trim().split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    return `${firstWord}2026`;
   };
 
   const handleSubmit = async (e) => {
@@ -1238,7 +1236,7 @@ export default function AdminSlotsUpload({ onClose }) {
               {authError && <p className="text-red-500 text-xs mb-3 text-center">{authError}</p>}
               <button onClick={authenticate} className="btn-primary w-full h-11">Login</button>
               <p className="text-center text-[10px] text-dark-600 mt-4">
-                Default: <span className="font-mono">fets2024</span> — set <span className="font-mono">VITE_ADMIN_PASSWORD</span> in .env to change
+                Default password: <span className="font-mono">fets2026</span>
               </p>
             </div>
           ) : (

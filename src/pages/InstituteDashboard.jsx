@@ -9,11 +9,9 @@ import { supabase } from '../lib/supabase';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function generateAccessCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let code = '';
-  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * 26)];
-  return `FETS-${code}-2026`;
+function generateAccessCode(instituteName = '') {
+  const firstWord = instituteName.trim().split(/\s+/)[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  return `${firstWord || 'FETS'}2026`;
 }
 
 function StatusBadge({ value }) {
@@ -103,7 +101,7 @@ function EntryScreen({ onAccessSuccess, onRegister }) {
           <p className="text-white/40 text-sm mb-7 leading-relaxed">Enter your institute's unique access code to view your dashboard and manage bookings.</p>
           <form onSubmit={handleAccess} className="space-y-4">
             <input type="text" value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-              placeholder="FETS-XXXX-2026"
+              placeholder="e.g. BRILLIANT2026"
               className="w-full px-5 py-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/20 focus:outline-none focus:border-[#FFD000]/50 focus:ring-1 focus:ring-[#FFD000]/20 transition-all font-mono font-black text-center tracking-[0.2em] text-lg uppercase shadow-inner"
               autoComplete="off" spellCheck={false}
             />
@@ -155,7 +153,7 @@ function RegisterScreen({ onSuccess, onBack }) {
     e.preventDefault();
     if (!name || !contactPerson || !email || !phone) { setError('Please fill all required fields.'); return; }
     setLoading(true); setError('');
-    const code = generateAccessCode();
+    const code = generateAccessCode(name);
     try {
       const { error: dbErr } = await supabase.from('coaching_centers').insert({
         name, contact: phone, email, city, contact_name: contactPerson,
