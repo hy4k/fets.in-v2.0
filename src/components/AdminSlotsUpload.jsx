@@ -526,11 +526,16 @@ function exportCSV(rows, filename) {
   const csv = [headers.join(','), ...rows.map(r =>
     headers.map(h => JSON.stringify(r[h] ?? '')).join(',')
   )].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  a.href = url;
   a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100);
 }
 
 function DataTable({ columns, rows, emptyMsg }) {

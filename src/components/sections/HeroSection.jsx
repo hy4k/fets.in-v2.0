@@ -24,8 +24,8 @@ export default function HeroSection() {
           transition={{ delay: 0.1 }}
           className="flex flex-col items-center"
         >
-          <h1 className="text-4xl md:text-7xl font-black text-white tracking-normal leading-none mb-4" style={{ wordSpacing: '0.25em' }}>
-            FORUN&nbsp; TESTING&nbsp; &amp;&nbsp; EDUCATIONAL <br />
+          <h1 className="text-4xl md:text-7xl font-black text-white tracking-normal leading-none mb-4" style={{ wordSpacing: '0.3em' }}>
+            FORUN TESTING &amp; EDUCATIONAL <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD000] via-[#E6AC00] to-[#CC9900]">
               SERVICES
             </span>

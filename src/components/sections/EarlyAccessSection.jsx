@@ -46,6 +46,14 @@ export default function EarlyAccessSection({ showToast, onSignupSuccess }) {
 
       if (error) throw error;
 
+      // Also save to early_access_leads so admin panel can see registrations
+      await supabase.from('early_access_leads').insert({
+        full_name: full_name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || null,
+        interested_exam: interested_exam || null,
+      }).catch(() => {}); // non-critical
+
       setDone(true);
       showToast('Account created! You are now logged in.');
       if (onSignupSuccess && data.user) onSignupSuccess(data.user);

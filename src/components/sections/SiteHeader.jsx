@@ -57,16 +57,26 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
               <button
                 type="button"
                 onClick={onOpenCalicut}
-                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-white/10 bg-white/5 text-white/80 text-sm font-semibold hover:bg-white/10 hover:text-white transition-all"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-[#FFD000]/30 bg-[#FFD000]/8 text-white text-sm font-bold hover:bg-[#FFD000]/15 hover:border-[#FFD000]/50 transition-all group"
               >
-                <MapPin size={14} className="text-[#FFD000]" /> Calicut
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFD000] opacity-60"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFD000]"></span>
+                </span>
+                <MapPin size={13} className="text-[#FFD000] group-hover:scale-110 transition-transform" />
+                Calicut
               </button>
               <button
                 type="button"
                 onClick={onOpenKochi}
-                className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg border border-white/10 bg-white/5 text-white/80 text-sm font-semibold hover:bg-white/10 hover:text-white transition-all"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-[#FFD000]/30 bg-[#FFD000]/8 text-white text-sm font-bold hover:bg-[#FFD000]/15 hover:border-[#FFD000]/50 transition-all group"
               >
-                <MapPin size={14} className="text-[#FFD000]" /> Kochi
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFD000] opacity-60"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFD000]"></span>
+                </span>
+                <MapPin size={13} className="text-[#FFD000] group-hover:scale-110 transition-transform" />
+                Kochi
               </button>
             </div>
 

@@ -176,7 +176,13 @@ export default function App() {
         </button>
       </div>
 
-      {isChatOpen && <AgentChatOverlay onClose={() => setIsChatOpen(false)} onOpenPanel={setActivePanel} />}
+      {isChatOpen && (
+        <AgentChatOverlay
+          onClose={() => setIsChatOpen(false)}
+          onOpenPanel={setActivePanel}
+          onOpenCmaMock={() => { setIsChatOpen(false); setIsCMABookingOpen(true); }}
+        />
+      )}
 
       <button type="button" onClick={handleAdminClick} className="fixed bottom-4 left-4 z-30 h-6 w-6 opacity-0" aria-hidden tabIndex={-1} />
 

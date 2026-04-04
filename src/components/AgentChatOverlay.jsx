@@ -26,9 +26,9 @@ function respond(intent) {
       actions: actions([['Check Dates First', 'exam_dates', Calendar]]),
     };
     case 'mock_exams': return {
-      content: `Full-simulation mocks under real exam conditions at our certified centres.`,
-      openPanel: 'mock-exams',
-      actions: actions([['Book Exam', 'book_exam', ClipboardList]]),
+      content: `Our CMA US mock runs under real exam conditions — 100 MCQs + 2 Essays, 4 hours. Book your Test Drive now.`,
+      openCmaMock: true,
+      actions: actions([['Book CMA Test Drive', 'book_mock_now', ClipboardList]]),
     };
     case 'contact': return {
       content: `Our centres:\n\n📍 **Calicut** — Kadooli Tower, West Nadakkavu\n📍 **Kochi** — K7 Corporate Towers\n📞 +91 9605686000`,
@@ -65,7 +65,7 @@ const WELCOME = {
 const W = 340;
 const H = 480;
 
-export default function AgentChatOverlay({ onClose, onOpenPanel }) {
+export default function AgentChatOverlay({ onClose, onOpenPanel, onOpenCmaMock }) {
   const [messages, setMessages]   = useState([WELCOME]);
   const [input, setInput]         = useState('');
   const [isTyping, setIsTyping]   = useState(false);
@@ -108,14 +108,16 @@ export default function AgentChatOverlay({ onClose, onOpenPanel }) {
 
   /* chat */
   const fire = useCallback((intent) => {
+    if (intent === 'book_mock_now') { onOpenCmaMock?.(); onClose(); return; }
     setIsTyping(true);
     const res = respond(intent);
     setTimeout(() => {
       setMessages((p) => [...p, { id: `a-${Date.now()}`, type: 'agent', content: res.content, actions: res.actions, showActions: !!res.actions }]);
       setIsTyping(false);
       if (res.openPanel) onOpenPanel(res.openPanel);
+      if (res.openCmaMock) { onOpenCmaMock?.(); onClose(); }
     }, 700);
-  }, [onOpenPanel]);
+  }, [onOpenPanel, onOpenCmaMock, onClose]);
 
   const send = () => {
     if (!input.trim() || isTyping) return;

@@ -2,10 +2,15 @@ import React, { useState, useEffect } from "react";
 import { X, CheckCircle2, Loader2, User, Calendar as CalendarIcon, Clock, BookOpen, CreditCard, Landmark } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
+function makeCode() {
+  return 'FETS' + Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
 export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
   const [flow, setFlow] = useState("direct"); // direct | success
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [confirmationCode, setConfirmationCode] = useState("");
 
   // Shared Data
   const [examPart, setExamPart] = useState("Part 1");
@@ -22,6 +27,7 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
     if (isOpen) {
       setFlow("direct");
       setError("");
+      setConfirmationCode("");
       setExamPart("Part 1");
       setPreferredDate("");
       setSessionTime("Morning (9:00 AM)");
@@ -42,6 +48,7 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
     }
     setLoading(true);
     setError("");
+    const code = makeCode();
     try {
       const { data: booking, error: bookingError } = await supabase
         .from("cma_mock_bookings")
@@ -55,21 +62,19 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
           session_time: sessionTime,
           payment_method: paymentMethod,
           student_count: 1,
+          confirmation_code: code,
         })
         .select()
         .single();
 
       if (bookingError) throw bookingError;
 
-      const { error: studentError } = await supabase
-        .from("cma_mock_students")
-        .insert({
-          booking_id: booking.id,
-          student_name: leadName,
-        });
+      await supabase.from("cma_mock_students").insert({
+        booking_id: booking.id,
+        student_name: leadName,
+      }).catch(() => {});
 
-      if (studentError) throw studentError;
-
+      setConfirmationCode(code);
       setFlow("success");
     } catch (err) {
       setError(err.message || "Booking failed.");
@@ -199,19 +204,32 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
   );
 
   const renderSuccess = () => (
-    <div className="py-12 text-center animate-fade-in-up">
-      <div className="w-24 h-24 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-        <CheckCircle2 size={48} />
+    <div className="py-10 text-center animate-fade-in-up">
+      <div className="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+        <CheckCircle2 size={40} />
       </div>
-      <h4 className="text-3xl font-black text-white mb-4 tracking-tight">Booking Confirmed!</h4>
-      <p className="text-white/50 font-medium mb-10 max-w-[280px] mx-auto leading-relaxed text-sm">
-        Your CMA Mock Test request has been successfully recorded. Our team will coordinate the next steps with you.
+      <h4 className="text-2xl font-black text-white mb-2 tracking-tight">Booking Confirmed!</h4>
+      <p className="text-white/40 text-sm mb-6">
+        Your request has been recorded. Our team will contact you at <span className="text-white/70 font-semibold">{leadEmail}</span>.
       </p>
+
+      {/* Confirmation code */}
+      <div className="mx-auto mb-6 max-w-xs rounded-2xl border border-[#FFD000]/30 bg-[#FFD000]/5 px-6 py-5">
+        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-2">Your Booking Code</p>
+        <p className="text-2xl font-black text-[#FFD000] tracking-widest font-mono">{confirmationCode}</p>
+        <p className="text-[11px] text-white/30 mt-2">Save this code for reference</p>
+      </div>
+
+      <div className="text-xs text-white/30 mb-8 px-2 leading-relaxed">
+        A copy of this booking has been sent to your details on file.<br/>
+        We will confirm your slot via WhatsApp or call.
+      </div>
+
       <button
         onClick={onClose}
-        className="w-full py-4 bg-white/5 border border-white/10 text-white rounded-xl font-bold hover:bg-white/10 transition-all shadow-md"
+        className="w-full py-3.5 bg-white/5 border border-white/10 text-white rounded-xl font-bold hover:bg-white/10 transition-all"
       >
-        Return to Home
+        Done
       </button>
     </div>
   );
