@@ -24,11 +24,19 @@ ALTER TABLE cma_mock_bookings ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pend
 -- Update any NULL status values to 'pending'
 UPDATE cma_mock_bookings SET status = 'pending' WHERE status IS NULL;
 
+-- Enable RLS on cma_mock_bookings (safe to re-run)
+ALTER TABLE cma_mock_bookings ENABLE ROW LEVEL SECURITY;
+
 -- Allow anon to read all cma_mock_bookings (admin panel + institute dashboard)
 DROP POLICY IF EXISTS "Public can read institutional cma bookings" ON cma_mock_bookings;
 DROP POLICY IF EXISTS "Public can read cma bookings" ON cma_mock_bookings;
 CREATE POLICY "Public can read cma bookings"
   ON cma_mock_bookings FOR SELECT USING (true);
+
+-- Allow anon to INSERT cma_mock_bookings (individual and institutional registrations)
+DROP POLICY IF EXISTS "Public can insert cma bookings" ON cma_mock_bookings;
+CREATE POLICY "Public can insert cma bookings"
+  ON cma_mock_bookings FOR INSERT WITH CHECK (true);
 
 -- ── cma_mock_students ──────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Public can read cma students for institutes" ON cma_mock_students;
@@ -39,10 +47,19 @@ DROP POLICY IF EXISTS "Public can insert cma students" ON cma_mock_students;
 CREATE POLICY "Public can insert cma students"
   ON cma_mock_students FOR INSERT WITH CHECK (true);
 
--- ── early_access_leads: allow admin panel to read ─────────────────────────────
+-- ── early_access_leads ────────────────────────────────────────────────────────
+-- Enable RLS (safe to re-run)
+ALTER TABLE early_access_leads ENABLE ROW LEVEL SECURITY;
+
+-- Allow admin panel to read
 DROP POLICY IF EXISTS "Public can read early access leads" ON early_access_leads;
 CREATE POLICY "Public can read early access leads"
   ON early_access_leads FOR SELECT USING (true);
+
+-- Allow anon to INSERT (candidate registration from the site)
+DROP POLICY IF EXISTS "Public can insert early access leads" ON early_access_leads;
+CREATE POLICY "Public can insert early access leads"
+  ON early_access_leads FOR INSERT WITH CHECK (true);
 
 -- ── mock_exam_bookings (slot-based): allow admin panel to read ─────────────────
 DROP POLICY IF EXISTS "Public can read mock exam bookings" ON mock_exam_bookings;

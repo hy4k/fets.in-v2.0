@@ -126,9 +126,9 @@ function groupByPeriod(items, getDate) {
 function PeriodHeader({ label, count }) {
   return (
     <div className="flex items-center gap-3 mt-6 mb-2 first:mt-0">
-      <span className="text-xs font-black text-dark-600 uppercase tracking-[0.2em]">{label}</span>
-      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-dark-950/8 text-dark-600">{count}</span>
-      <div className="flex-1 h-px bg-light-200"/>
+      <span className="text-[10px] font-black text-[#FFD000]/70 uppercase tracking-[0.25em]">{label}</span>
+      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFD000]/10 text-[#FFD000]/60">{count}</span>
+      <div className="flex-1 h-px bg-white/[0.08]"/>
     </div>
   );
 }
@@ -195,23 +195,23 @@ function UploadTab() {
   return (
     <div className="space-y-5">
       {/* Format guide */}
-      <div className="bg-primary-400/5 border border-primary-400/20 rounded-xl p-4">
-        <p className="text-sm font-semibold text-dark-950 mb-2">Accepted formats:</p>
+      <div className="bg-[#FFD000]/[0.05] border border-[#FFD000]/20 rounded-2xl p-4">
+        <p className="text-sm font-bold text-white mb-3">Accepted formats</p>
         <div className="space-y-2 text-xs">
-          <div className="bg-white border border-light-200 rounded-lg p-2">
-            <p className="font-bold text-dark-950 mb-1">✓ FETS Tracking Form (your existing files)</p>
-            <p className="text-dark-800">The "Seat Availability Tracking Form" Excel — just upload as-is. Morning = 9:00 AM, Noon = 2:00 PM.</p>
+          <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-3">
+            <p className="font-bold text-white mb-1">✓ FETS Tracking Form (your existing files)</p>
+            <p className="text-white/50">The "Seat Availability Tracking Form" Excel — just upload as-is. Morning = 9:00 AM, Noon = 2:00 PM.</p>
           </div>
-          <div className="bg-white border border-light-200 rounded-lg p-2">
-            <p className="font-bold text-dark-950 mb-1">✓ Simple format</p>
-            <p className="font-mono text-dark-800">Date | Center | Time Slot | Total Seats | Booked</p>
+          <div className="bg-white/[0.04] border border-white/[0.08] rounded-xl p-3">
+            <p className="font-bold text-white mb-1">✓ Simple format</p>
+            <p className="font-mono text-white/50">Date | Center | Time Slot | Total Seats | Booked</p>
           </div>
         </div>
       </div>
 
       {/* Drop zone */}
       <div
-        className="border-2 border-dashed border-light-300 rounded-2xl p-8 text-center cursor-pointer hover:border-primary-400/50 transition-all"
+        className="border-2 border-dashed border-white/[0.12] rounded-2xl p-10 text-center cursor-pointer hover:border-[#FFD000]/40 hover:bg-white/[0.02] transition-all"
         onClick={() => document.getElementById('admin-slot-file').click()}
         onDrop={e => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
         onDragOver={e => e.preventDefault()}
@@ -220,17 +220,17 @@ function UploadTab() {
           type="file" id="admin-slot-file" accept=".xlsx,.xls,.csv" className="hidden"
           onChange={e => e.target.files[0] && handleFile(e.target.files[0])}
         />
-        <FileSpreadsheet size={36} className="mx-auto text-primary-500 mb-3" />
-        <p className="font-semibold text-dark-950 text-sm mb-1">
+        <FileSpreadsheet size={36} className="mx-auto text-[#FFD000]/60 mb-3" />
+        <p className="font-bold text-white text-sm mb-1">
           {fileName || 'Drop your Excel / CSV here'}
         </p>
-        <p className="text-xs text-dark-800">
+        <p className="text-xs text-white/40">
           {parsedRows ? `${parsedRows.length} valid rows loaded` : 'or click to browse (.xlsx, .xls, .csv)'}
         </p>
       </div>
 
       {parseError && (
-        <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+        <div className="flex items-start gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
           <AlertCircle size={15} className="shrink-0 mt-0.5"/> {parseError}
         </div>
       )}
@@ -238,25 +238,25 @@ function UploadTab() {
       {/* Preview */}
       {parsedRows?.length > 0 && (
         <div>
-          <p className="text-xs font-bold text-dark-800 uppercase tracking-wider mb-2">
+          <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">
             Preview — first {Math.min(6, parsedRows.length)} of {parsedRows.length} rows
           </p>
-          <div className="overflow-x-auto rounded-xl border border-light-200">
+          <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
             <table className="w-full text-xs">
-              <thead className="bg-light-100">
+              <thead className="bg-white/[0.06]">
                 <tr>{['Date','Center','Session','Total','Booked','Available'].map(h=>(
-                  <th key={h} className="px-3 py-2 text-left font-semibold text-dark-950">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-bold text-white/70 uppercase tracking-wider">{h}</th>
                 ))}</tr>
               </thead>
               <tbody>
                 {parsedRows.slice(0,6).map((r,i)=>(
-                  <tr key={i} className="border-t border-light-100">
-                    <td className="px-3 py-2 text-dark-800">{r.date}</td>
-                    <td className="px-3 py-2 text-dark-800">{r.center}</td>
-                    <td className="px-3 py-2 text-dark-800">{r.time_slot}</td>
-                    <td className="px-3 py-2 text-dark-800">{r.total_seats}</td>
-                    <td className="px-3 py-2 text-dark-800">{r.booked_seats}</td>
-                    <td className="px-3 py-2 font-semibold text-green-700">{r.total_seats - r.booked_seats}</td>
+                  <tr key={i} className="border-t border-white/[0.06]">
+                    <td className="px-3 py-2 text-white/60">{r.date}</td>
+                    <td className="px-3 py-2 text-white/60">{r.center}</td>
+                    <td className="px-3 py-2 text-white/60">{r.time_slot}</td>
+                    <td className="px-3 py-2 text-white/60">{r.total_seats}</td>
+                    <td className="px-3 py-2 text-white/60">{r.booked_seats}</td>
+                    <td className="px-3 py-2 font-bold text-emerald-400">{r.total_seats - r.booked_seats}</td>
                   </tr>
                 ))}
               </tbody>
@@ -266,7 +266,7 @@ function UploadTab() {
       )}
 
       {parsedRows && (
-        <label className="flex items-center gap-2 text-sm text-dark-800 cursor-pointer select-none">
+        <label className="flex items-center gap-2 text-sm text-white/60 cursor-pointer select-none">
           <input
             type="checkbox" checked={clearExisting}
             onChange={e => setClearExisting(e.target.checked)}
@@ -279,8 +279,8 @@ function UploadTab() {
 
       {result && (
         <div className={`flex items-start gap-2 p-4 rounded-xl text-sm ${
-          result.success ? 'bg-green-50 border border-green-200 text-green-700'
-                        : 'bg-red-50 border border-red-200 text-red-700'}`}>
+          result.success ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                        : 'bg-red-500/10 border border-red-500/20 text-red-400'}`}>
           {result.success ? <CheckCircle size={15} className="shrink-0 mt-0.5"/> : <AlertCircle size={15} className="shrink-0 mt-0.5"/>}
           {result.success ? `Successfully uploaded ${result.count} slot entries.` : `Error: ${result.message}`}
         </div>
@@ -289,7 +289,7 @@ function UploadTab() {
       <button
         onClick={upload}
         disabled={!parsedRows || uploading}
-        className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+        className="w-full h-12 rounded-xl bg-[#FFD000] text-[#0a0a0a] font-black text-sm hover:bg-[#ffe44d] transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_20px_rgba(255,208,0,0.2)]"
       >
         {uploading
           ? <><Loader2 size={15} className="animate-spin"/> Uploading...</>
@@ -404,40 +404,31 @@ function ManageTab() {
 
   const toggleGroup = (key) => setExpandedDates(prev => ({ ...prev, [key]: !prev[key] }));
 
+  const selectCls = 'px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.10] text-white/70 text-xs cursor-pointer focus:outline-none focus:border-[#FFD000]/40';
+
   return (
     <div className="space-y-4">
       {/* Filters row */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Filter size={13} className="text-dark-800 shrink-0"/>
-        <select
-          value={filterCenter}
-          onChange={e => setFilterCenter(e.target.value)}
-          className="input-clean w-auto py-1.5 text-xs cursor-pointer"
-        >
+        <Filter size={13} className="text-white/40 shrink-0"/>
+        <select value={filterCenter} onChange={e => setFilterCenter(e.target.value)} className={selectCls} style={{ colorScheme: 'dark' }}>
           {centers.map(c => <option key={c}>{c}</option>)}
         </select>
-        <select
-          value={filterMonth}
-          onChange={e => setFilterMonth(e.target.value)}
-          className="input-clean w-auto py-1.5 text-xs cursor-pointer"
-        >
+        <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className={selectCls} style={{ colorScheme: 'dark' }}>
           {months.map(m => <option key={m}>{m === 'All' ? 'All Months' : new Date(m+'-01').toLocaleString('default',{month:'long',year:'numeric'})}</option>)}
         </select>
-        <button
-          onClick={fetchSlots}
-          className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950 transition-colors"
-        >
+        <button onClick={fetchSlots} className="ml-auto flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
         </button>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Loader2 size={26} className="animate-spin text-primary-500"/>
+          <Loader2 size={26} className="animate-spin text-[#FFD000]/40"/>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-10 text-sm text-dark-800 bg-light-100 rounded-xl border border-light-200">
-          No slots found for the selected filters.
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-10 text-center">
+          <p className="text-sm text-white/30">No slots found for the selected filters.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -448,29 +439,29 @@ function ManageTab() {
               return s + Math.max(0, e.total_seats - e.booked_seats);
             }, 0);
             return (
-              <div key={key} className="border border-light-200 rounded-xl overflow-hidden">
+              <div key={key} className="border border-white/[0.08] rounded-xl overflow-hidden">
                 {/* Group header */}
                 <button
                   onClick={() => toggleGroup(key)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-light-100 hover:bg-light-200 transition-colors text-left"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white/[0.04] hover:bg-white/[0.06] transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      group.center === 'Cochin' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                      group.center === 'Cochin' ? 'bg-blue-500/15 text-blue-400' : 'bg-amber-500/15 text-amber-400'
                     }`}>{group.center}</span>
-                    <span className="font-semibold text-dark-950 text-sm">{fmtDate(group.date)}</span>
+                    <span className="font-semibold text-white text-sm">{fmtDate(group.date)}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-dark-800">
+                    <span className="text-xs text-white/40">
                       {totalAvail} seat{totalAvail !== 1 ? 's' : ''} available
                     </span>
-                    <ChevronDown size={15} className={`text-dark-800 transition-transform ${isOpen ? 'rotate-180' : ''}`}/>
+                    <ChevronDown size={15} className={`text-white/30 transition-transform ${isOpen ? 'rotate-180' : ''}`}/>
                   </div>
                 </button>
 
                 {/* Slot rows */}
                 {isOpen && (
-                  <div className="divide-y divide-light-100">
+                  <div className="divide-y divide-white/[0.05]">
                     {group.slots.map(slot => {
                       const e      = getEdit(slot);
                       const dirty  = isDirty(slot);
@@ -479,13 +470,13 @@ function ManageTab() {
                       const res    = saveResult[slot.id];
 
                       return (
-                        <div key={slot.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div key={slot.id} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 bg-white/[0.01]">
                           {/* Label */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-semibold text-dark-950 text-sm">{slot.time_slot}</span>
-                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-primary-400/10 text-primary-600 font-semibold">{slot.part}</span>
-                              <span className={`text-[11px] font-semibold ${avail === 0 ? 'text-red-500' : avail <= 2 ? 'text-amber-600' : 'text-green-600'}`}>
+                              <span className="font-semibold text-white/80 text-sm">{slot.time_slot}</span>
+                              {slot.part && <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#FFD000]/10 text-[#FFD000]/70 font-semibold">{slot.part}</span>}
+                              <span className={`text-[11px] font-semibold ${avail === 0 ? 'text-red-400' : avail <= 2 ? 'text-amber-400' : 'text-emerald-400'}`}>
                                 {avail === 0 ? 'Full' : `${avail} available`}
                               </span>
                             </div>
@@ -494,45 +485,36 @@ function ManageTab() {
                           {/* Editable fields */}
                           <div className="flex items-center gap-2 shrink-0 flex-wrap">
                             <div className="flex items-center gap-1.5">
-                              <label className="text-xs text-dark-800 whitespace-nowrap">Total seats</label>
+                              <label className="text-xs text-white/40 whitespace-nowrap">Total</label>
                               <input
                                 type="number" min="0" max="999"
                                 value={e.total_seats}
                                 onChange={ev => setEdit(slot.id, 'total_seats', ev.target.value)}
-                                className="w-16 text-center text-sm font-semibold border border-light-300 rounded-lg py-1 bg-light-50 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20"
+                                className="w-16 text-center text-sm font-bold border border-white/[0.12] rounded-lg py-1 bg-white/[0.06] text-white focus:border-[#FFD000]/40 focus:outline-none"
                               />
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <label className="text-xs text-dark-800 whitespace-nowrap">Booked</label>
+                              <label className="text-xs text-white/40 whitespace-nowrap">Booked</label>
                               <input
                                 type="number" min="0"
                                 value={e.booked_seats}
                                 onChange={ev => setEdit(slot.id, 'booked_seats', ev.target.value)}
-                                className="w-16 text-center text-sm font-semibold border border-light-300 rounded-lg py-1 bg-light-50 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-400/20"
+                                className="w-16 text-center text-sm font-bold border border-white/[0.12] rounded-lg py-1 bg-white/[0.06] text-white focus:border-[#FFD000]/40 focus:outline-none"
                               />
                             </div>
 
-                            {/* Save button */}
                             {dirty && !res && (
                               <button
                                 onClick={() => saveSlot(slot)}
                                 disabled={isSaving}
-                                className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors disabled:opacity-50"
                               >
                                 {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12}/>}
                                 {isSaving ? 'Saving' : 'Save'}
                               </button>
                             )}
-                            {res === 'ok' && (
-                              <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
-                                <CheckCircle size={13}/> Saved
-                              </span>
-                            )}
-                            {res === 'err' && (
-                              <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
-                                <AlertCircle size={13}/> Error
-                              </span>
-                            )}
+                            {res === 'ok' && <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400"><CheckCircle size={13}/> Saved</span>}
+                            {res === 'err' && <span className="flex items-center gap-1 text-xs font-semibold text-red-400"><AlertCircle size={13}/> Error</span>}
                           </div>
                         </div>
                       );
@@ -545,7 +527,7 @@ function ManageTab() {
         </div>
       )}
 
-      <p className="text-xs text-dark-800 text-center pt-1">
+      <p className="text-xs text-white/20 text-center pt-1">
         Changes save instantly to the database. The booking page updates in real time.
       </p>
     </div>
@@ -574,23 +556,25 @@ function exportCSV(rows, filename) {
 
 function DataTable({ columns, rows, emptyMsg }) {
   if (!rows.length) return (
-    <p className="text-center py-10 text-sm text-dark-800">{emptyMsg}</p>
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-10 text-center">
+      <p className="text-sm text-white/30">{emptyMsg}</p>
+    </div>
   );
   return (
-    <div className="overflow-x-auto rounded-xl border border-light-200">
+    <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
       <table className="w-full text-xs min-w-[600px]">
-        <thead className="bg-light-100 border-b border-light-200">
+        <thead className="bg-white/[0.06] border-b border-white/[0.08]">
           <tr>
             {columns.map(c => (
-              <th key={c.key} className="px-3 py-2.5 text-left font-bold text-dark-950 whitespace-nowrap">{c.label}</th>
+              <th key={c.key} className="px-3 py-2.5 text-left font-bold text-white/70 whitespace-nowrap uppercase tracking-wider text-[10px]">{c.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className="border-t border-light-100 hover:bg-light-50">
+            <tr key={i} className="border-t border-white/[0.06] hover:bg-white/[0.03] transition-colors">
               {columns.map(c => (
-                <td key={c.key} className="px-3 py-2 text-dark-800 whitespace-nowrap max-w-[200px] truncate">
+                <td key={c.key} className="px-3 py-2.5 text-white/60 whitespace-nowrap max-w-[200px] truncate">
                   {c.render ? c.render(row[c.key], row) : (row[c.key] ?? '—')}
                 </td>
               ))}
@@ -648,18 +632,18 @@ function LeadsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-dark-950">{rows.length} registrations</p>
+        <p className="text-sm font-bold text-white">{rows.length} <span className="text-white/40 font-normal">registrations</span></p>
         <div className="flex gap-2">
-          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
           </button>
-          <button onClick={() => exportCSV(rows, 'fets-leads.csv')} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800">
+          <button onClick={() => exportCSV(rows, 'fets-leads.csv')} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors">
             <Download size={12}/> Export CSV
           </button>
         </div>
       </div>
       {loading
-        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-primary-500"/></div>
+        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#FFD000]/40"/></div>
         : <DataTable columns={cols} rows={rows} emptyMsg="No early access registrations yet." />
       }
     </div>
@@ -701,18 +685,18 @@ function BookingsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-dark-950">{rows.length} bookings</p>
+        <p className="text-sm font-bold text-white">{rows.length} <span className="text-white/40 font-normal">bookings</span></p>
         <div className="flex gap-2">
-          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
           </button>
-          <button onClick={() => exportCSV(rows, 'fets-bookings.csv')} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800">
+          <button onClick={() => exportCSV(rows, 'fets-bookings.csv')} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors">
             <Download size={12}/> Export CSV
           </button>
         </div>
       </div>
       {loading
-        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-primary-500"/></div>
+        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#FFD000]/40"/></div>
         : <DataTable columns={cols} rows={rows} emptyMsg="No slot-based bookings yet." />
       }
     </div>
@@ -774,63 +758,63 @@ function CmaRequestsTab() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-dark-950">{rows.length} CMA mock requests</p>
+        <p className="text-sm font-bold text-white">{rows.length} <span className="text-white/40 font-normal">CMA mock requests</span></p>
         <div className="flex gap-2">
-          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
           </button>
-          <button onClick={exportAll} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800">
+          <button onClick={exportAll} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors">
             <Download size={12}/> Export CSV
           </button>
         </div>
       </div>
 
       {loading
-        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-primary-500"/></div>
+        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#FFD000]/40"/></div>
         : rows.length === 0
-          ? <p className="text-center py-10 text-sm text-dark-800">No CMA mock requests yet.</p>
+          ? <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-10 text-center"><p className="text-sm text-white/30">No CMA mock requests yet.</p></div>
           : groupByPeriod(rows, r => r.preferred_date).map(([period, items]) => (
             <div key={period}>
               <PeriodHeader label={period} count={items.length} />
               <div className="space-y-2">
                 {items.map(r => (
-                  <div key={r.id} className="border border-light-200 rounded-xl overflow-hidden">
+                  <div key={r.id} className="border border-white/[0.08] rounded-xl overflow-hidden">
                     <button
                       onClick={() => r.booking_type === 'institutional' ? loadStudents(r.id) : setExpanded(expanded === r.id ? null : r.id)}
-                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors"
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/[0.03] hover:bg-white/[0.05] text-left transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${r.booking_type === 'institutional' ? 'bg-blue-100 text-blue-700' : 'bg-primary-400/15 text-primary-600'}`}>
+                        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${r.booking_type === 'institutional' ? 'bg-blue-500/15 text-blue-400' : 'bg-[#FFD000]/15 text-[#FFD000]/80'}`}>
                           {r.booking_type === 'institutional' ? 'Bulk' : 'Direct'}
                         </span>
-                        <span className="font-semibold text-dark-950 text-sm truncate">
+                        <span className="font-semibold text-white text-sm truncate">
                           {r.lead_name || `Coaching Center · ${r.student_count} students`}
                         </span>
-                        <span className="text-xs text-dark-800 shrink-0">{r.exam_part}</span>
+                        <span className="text-xs text-white/40 shrink-0">{r.exam_part}</span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-xs text-dark-800">{r.preferred_date}</span>
+                        <span className="text-xs text-white/40">{r.preferred_date}</span>
                         <StatusBadge value={r.status} />
-                        <ChevronDown size={14} className={`text-dark-800 transition-transform ${expanded === r.id ? 'rotate-180' : ''}`}/>
+                        <ChevronDown size={14} className={`text-white/30 transition-transform ${expanded === r.id ? 'rotate-180' : ''}`}/>
                       </div>
                     </button>
                     {expanded === r.id && (
-                      <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
+                      <div className="px-4 py-4 border-t border-white/[0.06] bg-white/[0.02] text-xs space-y-3">
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                           {r.booking_type === 'direct' && <>
-                            <div><span className="text-dark-600 font-semibold">Email: </span><span className="text-dark-950">{r.lead_email || '—'}</span></div>
-                            <div><span className="text-dark-600 font-semibold">Phone: </span><span className="text-dark-950">{r.lead_phone || '—'}</span></div>
+                            <div><span className="text-white/40 font-semibold">Email: </span><span className="text-white/70">{r.lead_email || '—'}</span></div>
+                            <div><span className="text-white/40 font-semibold">Phone: </span><span className="text-white/70">{r.lead_phone || '—'}</span></div>
                           </>}
-                          {r.confirmation_code && <div><span className="text-dark-600 font-semibold">Booking Code: </span><span className="font-mono font-bold text-dark-950">{r.confirmation_code}</span></div>}
-                          <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{r.session_time}</span></div>
-                          <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{r.payment_method}</span></div>
-                          <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{r.created_at ? new Date(r.created_at).toLocaleString('en-IN') : '—'}</span></div>
+                          {r.confirmation_code && <div><span className="text-white/40 font-semibold">Booking Code: </span><span className="font-mono font-bold text-[#FFD000]">{r.confirmation_code}</span></div>}
+                          <div><span className="text-white/40 font-semibold">Session: </span><span className="text-white/70">{r.session_time}</span></div>
+                          <div><span className="text-white/40 font-semibold">Payment: </span><span className="text-white/70">{r.payment_method}</span></div>
+                          <div><span className="text-white/40 font-semibold">Submitted: </span><span className="text-white/70">{r.created_at ? new Date(r.created_at).toLocaleString('en-IN') : '—'}</span></div>
                         </div>
                         {r.booking_type === 'institutional' && students[r.id] && (
                           <div>
-                            <p className="font-bold text-dark-950 mb-1.5">Student Roster ({students[r.id].length})</p>
+                            <p className="font-bold text-white/80 mb-1.5">Student Roster ({students[r.id].length})</p>
                             <ol className="space-y-1">
-                              {students[r.id].map((s, i) => <li key={i} className="text-dark-800">{i + 1}. {s.student_name}</li>)}
+                              {students[r.id].map((s, i) => <li key={i} className="text-white/50">{i + 1}. {s.student_name}</li>)}
                             </ol>
                           </div>
                         )}
@@ -965,64 +949,64 @@ function InstitutesTab() {
   return (
     <div className="space-y-4">
       {successCode && (
-        <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-green-50 border border-green-200">
+        <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
           <div>
-            <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Institute Added — Share this Access Code</p>
-            <p className="font-mono font-black text-green-800 text-xl tracking-widest">{successCode}</p>
+            <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">Institute Added — Share this Access Code</p>
+            <p className="font-mono font-black text-[#FFD000] text-xl tracking-widest">{successCode}</p>
           </div>
-          <button onClick={() => { copyCode(successCode); setSuccessCode(''); }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg bg-green-700 text-white hover:bg-green-800">
+          <button onClick={() => { copyCode(successCode); setSuccessCode(''); }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30">
             <Copy size={12}/> Copy & Dismiss
           </button>
         </div>
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-dark-950">{centers.length} partner institutes</p>
+        <p className="text-sm font-bold text-white">{centers.length} <span className="text-white/40 font-normal">partner institutes</span></p>
         <div className="flex gap-2">
-          <button onClick={fetchCenters} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+          <button onClick={fetchCenters} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
           </button>
-          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800">
+          <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors">
             <Plus size={12}/> Add Institute
           </button>
         </div>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="border border-light-200 rounded-xl p-5 bg-light-50 space-y-4">
-          <h4 className="font-bold text-dark-950 text-sm">Add New Institute</h4>
+        <form onSubmit={handleSubmit} className="border border-white/[0.10] rounded-2xl p-5 bg-white/[0.04] space-y-4">
+          <h4 className="font-bold text-white text-sm">Add New Institute</h4>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Institute Name *</label>
-              <input value={name} onChange={e => setName(e.target.value)} placeholder="Institute name" className="input-clean text-sm" required />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">City *</label>
-              <select value={city} onChange={e => setCity(e.target.value)} className="input-clean text-sm">
-                <option>Calicut</option>
-                <option>Kochi</option>
-                <option>Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Contact Person *</label>
-              <input value={contactPerson} onChange={e => setContactPerson(e.target.value)} placeholder="Contact person name" className="input-clean text-sm" required />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Phone *</label>
-              <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" className="input-clean text-sm" required />
-            </div>
+            {[
+              { label: 'Institute Name *', val: name, set: setName, placeholder: 'Institute name' },
+              null,
+              { label: 'Contact Person *', val: contactPerson, set: setContactPerson, placeholder: 'Contact person name' },
+              { label: 'Phone *', val: phone, set: setPhone, placeholder: '+91 XXXXX XXXXX', type: 'tel' },
+            ].map((field, i) => field ? (
+              <div key={i}>
+                <label className="block text-[10px] font-bold text-white/40 mb-1 uppercase tracking-wider">{field.label}</label>
+                <input value={field.val} onChange={e => field.set(e.target.value)} placeholder={field.placeholder} type={field.type || 'text'}
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white placeholder:text-white/20 focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm" required />
+              </div>
+            ) : (
+              <div key={i}>
+                <label className="block text-[10px] font-bold text-white/40 mb-1 uppercase tracking-wider">City *</label>
+                <select value={city} onChange={e => setCity(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm" style={{ colorScheme: 'dark' }}>
+                  <option>Calicut</option><option>Kochi</option><option>Other</option>
+                </select>
+              </div>
+            ))}
             <div className="col-span-2">
-              <label className="block text-[10px] font-bold text-dark-700 mb-1 uppercase tracking-wider">Email *</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="institute@email.com" className="input-clean text-sm" required />
+              <label className="block text-[10px] font-bold text-white/40 mb-1 uppercase tracking-wider">Email *</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="institute@email.com"
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white placeholder:text-white/20 focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm" required />
             </div>
           </div>
-          {formError && <p className="text-red-500 text-xs">{formError}</p>}
+          {formError && <p className="text-red-400 text-xs">{formError}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-1.5 text-sm">
+            <button type="submit" disabled={submitting} className="flex items-center gap-1.5 text-sm px-4 py-2.5 rounded-xl bg-[#FFD000] text-[#0a0a0a] font-black hover:bg-[#ffe44d] transition-all">
               {submitting ? <Loader2 size={13} className="animate-spin"/> : <Plus size={13}/>} Create Institute
             </button>
-            <button type="button" onClick={() => setShowForm(false)} className="text-xs font-bold text-dark-700 hover:text-dark-950 px-3 py-1.5 rounded-lg border border-light-300 bg-white">
+            <button type="button" onClick={() => setShowForm(false)} className="text-xs font-bold text-white/40 hover:text-white px-3 py-2 rounded-xl border border-white/[0.10] hover:border-white/20 transition-colors">
               Cancel
             </button>
           </div>
@@ -1030,27 +1014,27 @@ function InstitutesTab() {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-primary-500"/></div>
+        <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#FFD000]/40"/></div>
       ) : centers.length === 0 ? (
-        <p className="text-center py-10 text-sm text-dark-800">No institutes added yet.</p>
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-10 text-center"><p className="text-sm text-white/30">No institutes added yet.</p></div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-light-200">
+        <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
           <table className="w-full text-xs min-w-[700px]">
-            <thead className="bg-dark-950 border-b border-light-200">
+            <thead className="bg-white/[0.06] border-b border-white/[0.08]">
               <tr>
                 {['Name', 'City', 'Access Code', 'Contact', 'Phone', 'Status', '# Bookings', 'Actions'].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left font-bold text-white whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2.5 text-left font-bold text-white/60 whitespace-nowrap uppercase tracking-wider text-[10px]">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {centers.map(c => (
-                <tr key={c.id} className="border-t border-light-100 hover:bg-light-50">
-                  <td className="px-3 py-2.5 font-semibold text-dark-950 max-w-[160px] truncate">{c.name}</td>
-                  <td className="px-3 py-2.5 text-dark-800">{c.city || '—'}</td>
+                <tr key={c.id} className="border-t border-white/[0.06] hover:bg-white/[0.03] transition-colors">
+                  <td className="px-3 py-2.5 font-semibold text-white max-w-[160px] truncate">{c.name}</td>
+                  <td className="px-3 py-2.5 text-white/50">{c.city || '—'}</td>
                   <td className="px-3 py-2.5">
                     <span
-                      className="font-mono cursor-pointer select-none"
+                      className="font-mono cursor-pointer select-none text-white/40 hover:text-[#FFD000] transition-colors"
                       title="Hover to reveal"
                       onMouseEnter={() => setRevealedCodes(p => ({ ...p, [c.id]: true }))}
                       onMouseLeave={() => setRevealedCodes(p => ({ ...p, [c.id]: false }))}
@@ -1058,29 +1042,25 @@ function InstitutesTab() {
                       {revealedCodes[c.id] ? c.access_code : '••••••••••••'}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-dark-800">{c.contact_name || c.contact || '—'}</td>
-                  <td className="px-3 py-2.5 text-dark-800">{c.contact || '—'}</td>
+                  <td className="px-3 py-2.5 text-white/50">{c.contact_name || c.contact || '—'}</td>
+                  <td className="px-3 py-2.5 text-white/50">{c.contact || '—'}</td>
                   <td className="px-3 py-2.5">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.is_active ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'}`}>
                       {c.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 text-dark-800 text-center">{bookingCounts[c.id] ?? '—'}</td>
+                  <td className="px-3 py-2.5 text-white/50 text-center">{bookingCounts[c.id] ?? '—'}</td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => copyCode(c.access_code)}
-                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded bg-dark-950 text-primary-400 hover:bg-dark-800"
-                        title="Copy code"
-                      >
+                      <button onClick={() => copyCode(c.access_code)}
+                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-[#FFD000]/10 text-[#FFD000]/80 hover:bg-[#FFD000]/20 transition-colors border border-[#FFD000]/20"
+                        title="Copy code">
                         <Copy size={10}/> Copy
                       </button>
-                      <button
-                        onClick={() => toggleActive(c)}
-                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded border border-light-300 bg-white hover:bg-light-100 text-dark-700"
-                        title={c.is_active ? 'Deactivate' : 'Activate'}
-                      >
-                        {c.is_active ? <ToggleRight size={12} className="text-green-600"/> : <ToggleLeft size={12} className="text-dark-600"/>}
+                      <button onClick={() => toggleActive(c)}
+                        className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg border border-white/[0.10] bg-white/[0.04] hover:bg-white/[0.08] text-white/50 transition-colors"
+                        title={c.is_active ? 'Deactivate' : 'Activate'}>
+                        {c.is_active ? <ToggleRight size={12} className="text-emerald-400"/> : <ToggleLeft size={12} className="text-white/30"/>}
                         {c.is_active ? 'Deactivate' : 'Activate'}
                       </button>
                     </div>
@@ -1093,20 +1073,20 @@ function InstitutesTab() {
       )}
 
       {/* ── Institute Bookings section ── */}
-      <div className="mt-6 pt-5 border-t border-light-200">
+      <div className="mt-6 pt-5 border-t border-white/[0.08]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowBookings(!showBookings)}
-              className="flex items-center gap-2 text-sm font-bold text-dark-950 hover:text-dark-700"
+              className="flex items-center gap-2 text-sm font-bold text-white hover:text-white/70 transition-colors"
             >
               <ChevronDown size={15} className={`transition-transform ${showBookings ? 'rotate-0' : '-rotate-90'}`}/>
               Institute Bookings
             </button>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{instBookings.length}</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">{instBookings.length}</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={fetchInstBookings} className="flex items-center gap-1.5 text-xs font-semibold text-dark-800 hover:text-dark-950">
+            <button onClick={fetchInstBookings} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
               <RefreshCw size={12} className={instBookingsLoading ? 'animate-spin' : ''}/> Refresh
             </button>
             <button
@@ -1125,7 +1105,7 @@ function InstitutesTab() {
                 exportCSV(flat, 'fets-institute-bookings.csv');
               }}
               disabled={!instBookings.length}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800 disabled:opacity-40"
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors disabled:opacity-40"
             >
               <Download size={12}/> Export CSV
             </button>
@@ -1134,9 +1114,9 @@ function InstitutesTab() {
 
         {showBookings && (
           instBookingsLoading ? (
-            <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-primary-500"/></div>
+            <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-[#FFD000]/40"/></div>
           ) : instBookings.length === 0 ? (
-            <p className="text-center py-8 text-sm text-dark-600">No institutional bookings yet.</p>
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-8 text-center"><p className="text-sm text-white/30">No institutional bookings yet.</p></div>
           ) : (
             <div>
               {groupByPeriod(instBookings, b => b.preferred_date).map(([period, items]) => (
@@ -1144,35 +1124,35 @@ function InstitutesTab() {
                   <PeriodHeader label={period} count={items.length} />
                   <div className="space-y-2">
                     {items.map(b => (
-                      <div key={b.id} className="border border-light-200 rounded-xl overflow-hidden">
+                      <div key={b.id} className="border border-white/[0.08] rounded-xl overflow-hidden">
                         <button onClick={() => loadBookingStudents(b.id)}
-                          className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-light-50 hover:bg-light-100 text-left transition-colors">
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-white/[0.03] hover:bg-white/[0.05] text-left transition-colors">
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Bulk</span>
-                            <span className="font-semibold text-dark-950 text-sm truncate">{b.coaching_centers?.name || 'Unknown Institute'}</span>
-                            <span className="text-xs text-dark-600 shrink-0">{b.exam_part}</span>
-                            <span className="text-xs text-dark-600 shrink-0">{b.student_count} students</span>
+                            <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">Bulk</span>
+                            <span className="font-semibold text-white text-sm truncate">{b.coaching_centers?.name || 'Unknown Institute'}</span>
+                            <span className="text-xs text-white/40 shrink-0">{b.exam_part}</span>
+                            <span className="text-xs text-white/40 shrink-0">{b.student_count} students</span>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-xs text-dark-700">{b.preferred_date}</span>
+                            <span className="text-xs text-white/40">{b.preferred_date}</span>
                             <StatusBadge value={b.status || 'pending'} />
-                            <ChevronDown size={13} className={`text-dark-600 transition-transform ${expandedBooking === b.id ? 'rotate-180' : ''}`}/>
+                            <ChevronDown size={13} className={`text-white/30 transition-transform ${expandedBooking === b.id ? 'rotate-180' : ''}`}/>
                           </div>
                         </button>
                         {expandedBooking === b.id && (
-                          <div className="px-4 py-4 border-t border-light-100 bg-white text-xs space-y-3">
+                          <div className="px-4 py-4 border-t border-white/[0.06] bg-white/[0.02] text-xs space-y-3">
                             <div className="grid grid-cols-3 gap-x-6 gap-y-2">
-                              <div><span className="text-dark-600 font-semibold">Institute: </span><span className="text-dark-950 font-bold">{b.coaching_centers?.name || '—'}</span></div>
-                              <div><span className="text-dark-600 font-semibold">City: </span><span className="text-dark-950">{b.coaching_centers?.city || '—'}</span></div>
-                              <div><span className="text-dark-600 font-semibold">Session: </span><span className="text-dark-950">{b.session_time}</span></div>
-                              <div><span className="text-dark-600 font-semibold">Payment: </span><span className="text-dark-950">{b.payment_method}</span></div>
-                              <div><span className="text-dark-600 font-semibold">Submitted: </span><span className="text-dark-950">{b.created_at ? new Date(b.created_at).toLocaleString('en-IN') : '—'}</span></div>
+                              <div><span className="text-white/40 font-semibold">Institute: </span><span className="text-white font-bold">{b.coaching_centers?.name || '—'}</span></div>
+                              <div><span className="text-white/40 font-semibold">City: </span><span className="text-white/70">{b.coaching_centers?.city || '—'}</span></div>
+                              <div><span className="text-white/40 font-semibold">Session: </span><span className="text-white/70">{b.session_time}</span></div>
+                              <div><span className="text-white/40 font-semibold">Payment: </span><span className="text-white/70">{b.payment_method}</span></div>
+                              <div><span className="text-white/40 font-semibold">Submitted: </span><span className="text-white/70">{b.created_at ? new Date(b.created_at).toLocaleString('en-IN') : '—'}</span></div>
                             </div>
                             {bookingStudents[b.id] && (
                               <div>
-                                <p className="font-bold text-dark-950 mb-1.5">Student Roster ({bookingStudents[b.id].length})</p>
+                                <p className="font-bold text-white/80 mb-1.5">Student Roster ({bookingStudents[b.id].length})</p>
                                 <div className="grid grid-cols-2 gap-1">
-                                  {bookingStudents[b.id].map((s, i) => <span key={i} className="text-dark-700">{i + 1}. {s.student_name}</span>)}
+                                  {bookingStudents[b.id].map((s, i) => <span key={i} className="text-white/50">{i + 1}. {s.student_name}</span>)}
                                 </div>
                               </div>
                             )}
@@ -1336,36 +1316,36 @@ function ResultsTab() {
     <div className="space-y-5">
 
       {/* ── Upload section ── */}
-      <div className="rounded-xl border border-light-200 overflow-hidden">
+      <div className="rounded-2xl border border-white/[0.10] overflow-hidden">
         <button
           onClick={() => setShowUpload(!showUpload)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-dark-950 text-white hover:bg-dark-900 transition-colors"
+          className="w-full flex items-center justify-between px-5 py-4 bg-[#FFD000]/[0.08] hover:bg-[#FFD000]/[0.12] transition-colors border-b border-[#FFD000]/10"
         >
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <Upload size={14} className="text-primary-400"/> Publish Results to Institutes
+          <div className="flex items-center gap-2 text-sm font-bold text-white">
+            <Upload size={14} className="text-[#FFD000]"/> Publish Exam Results
           </div>
-          <ChevronDown size={14} className={`transition-transform text-white/40 ${showUpload ? 'rotate-180' : ''}`}/>
+          <ChevronDown size={14} className={`transition-transform text-white/30 ${showUpload ? 'rotate-180' : ''}`}/>
         </button>
 
         {showUpload && (
-          <div className="p-4 bg-light-50 space-y-4">
+          <div className="p-5 bg-white/[0.02] space-y-4">
             {/* Mode toggle */}
-            <div className="flex gap-1 bg-light-200 rounded-xl p-1">
+            <div className="flex gap-1 bg-white/[0.06] rounded-xl p-1">
               {[['institute', 'Institute Results'], ['individual', 'Individual Candidate']].map(([mode, label]) => (
                 <button key={mode} onClick={() => { setUploadMode(mode); setUploadMsg(null); setParsedRows([]); if (fileRef.current) fileRef.current.value = ''; }}
-                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${uploadMode === mode ? 'bg-dark-950 text-white shadow-sm' : 'text-dark-700 hover:text-dark-950'}`}>
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${uploadMode === mode ? 'bg-[#FFD000] text-[#0a0a0a] shadow-sm' : 'text-white/40 hover:text-white'}`}>
                   {label}
                 </button>
               ))}
             </div>
 
             {/* Template download */}
-            <div className="flex items-center justify-between rounded-lg border border-light-200 bg-white px-4 py-3">
+            <div className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3">
               <div>
-                <p className="text-xs font-bold text-dark-950 mb-0.5">Excel Format: Student Name · CMA Part · Exam Date · Score · Result (Pass/Fail)</p>
-                <p className="text-[11px] text-dark-600">Download template for the correct column order</p>
+                <p className="text-xs font-bold text-white mb-0.5">Excel Format: Student Name · CMA Part · Exam Date · Score · Result (Pass/Fail)</p>
+                <p className="text-[11px] text-white/40">Download template for the correct column order</p>
               </div>
-              <button onClick={downloadTemplate} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-dark-950 text-primary-400 hover:bg-dark-800 shrink-0">
+              <button onClick={downloadTemplate} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000]/10 text-[#FFD000]/80 hover:bg-[#FFD000]/20 border border-[#FFD000]/20 shrink-0">
                 <Download size={12}/> Template
               </button>
             </div>
@@ -1373,8 +1353,10 @@ function ResultsTab() {
             {/* Institute selector OR candidate email */}
             {uploadMode === 'institute' ? (
               <div>
-                <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Select Institute *</label>
-                <select value={selectedCenter} onChange={e => setSelectedCenter(e.target.value)} className="input-clean text-sm w-full">
+                <label className="block text-[10px] font-bold text-white/40 mb-1.5 uppercase tracking-wider">Select Institute *</label>
+                <select value={selectedCenter} onChange={e => setSelectedCenter(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm"
+                  style={{ colorScheme: 'dark' }}>
                   <option value="">— Choose institute —</option>
                   {centers.map(c => (
                     <option key={c.id} value={c.id}>{c.name}{c.city ? ` (${c.city})` : ''}</option>
@@ -1383,44 +1365,41 @@ function ResultsTab() {
               </div>
             ) : (
               <div>
-                <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Candidate Email *</label>
-                <input
-                  type="email"
-                  value={candidateEmail}
-                  onChange={e => setCandidateEmail(e.target.value)}
+                <label className="block text-[10px] font-bold text-white/40 mb-1.5 uppercase tracking-wider">Candidate Email *</label>
+                <input type="email" value={candidateEmail} onChange={e => setCandidateEmail(e.target.value)}
                   placeholder="candidate@email.com"
-                  className="input-clean text-sm w-full"
-                />
-                <p className="text-[11px] text-dark-500 mt-1">Results will appear in this candidate's personal dashboard when they log in.</p>
+                  className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white placeholder:text-white/20 focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm" />
+                <p className="text-[11px] text-white/30 mt-1.5">Results will appear in this candidate's personal dashboard when they log in.</p>
               </div>
             )}
 
             {/* File upload */}
             <div>
-              <label className="block text-[10px] font-bold text-dark-700 mb-1.5 uppercase tracking-wider">Upload Excel File *</label>
-              <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="input-clean text-sm w-full cursor-pointer" />
+              <label className="block text-[10px] font-bold text-white/40 mb-1.5 uppercase tracking-wider">Upload Excel File *</label>
+              <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white/60 focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm cursor-pointer file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white/[0.08] file:text-white/60 file:text-xs file:font-bold hover:file:bg-white/[0.12]" />
             </div>
 
-            {parseErr && <p className="text-red-600 text-xs font-medium">{parseErr}</p>}
+            {parseErr && <p className="text-red-400 text-xs font-medium">{parseErr}</p>}
 
             {/* Preview */}
             {parsedRows.length > 0 && (
-              <div className="rounded-lg border border-light-200 overflow-hidden">
-                <div className="px-3 py-2 bg-emerald-50 border-b border-light-200 flex items-center justify-between">
-                  <p className="text-xs font-bold text-emerald-700">{parsedRows.length} rows ready to publish</p>
-                  <span className="text-[10px] text-dark-600">Preview (first 5)</span>
+              <div className="rounded-xl border border-white/[0.08] overflow-hidden">
+                <div className="px-3 py-2 bg-emerald-500/10 border-b border-white/[0.06] flex items-center justify-between">
+                  <p className="text-xs font-bold text-emerald-400">{parsedRows.length} rows ready to publish</p>
+                  <span className="text-[10px] text-white/30">Preview (first 5)</span>
                 </div>
                 <table className="w-full text-xs">
-                  <thead className="bg-light-100">
-                    <tr>{['Student Name','Part','Date','Score','Result'].map(h => <th key={h} className="px-3 py-2 text-left font-bold text-dark-700">{h}</th>)}</tr>
+                  <thead className="bg-white/[0.05]">
+                    <tr>{['Student Name','Part','Date','Score','Result'].map(h => <th key={h} className="px-3 py-2 text-left font-bold text-white/50 uppercase tracking-wider text-[10px]">{h}</th>)}</tr>
                   </thead>
                   <tbody>
                     {parsedRows.slice(0,5).map((r,i) => (
-                      <tr key={i} className="border-t border-light-100">
-                        <td className="px-3 py-1.5 font-medium text-dark-950">{r.student_name}</td>
-                        <td className="px-3 py-1.5 text-dark-700">{r.exam_part || '—'}</td>
-                        <td className="px-3 py-1.5 text-dark-700">{r.exam_date || '—'}</td>
-                        <td className="px-3 py-1.5 text-dark-700">{r.score ?? '—'}</td>
+                      <tr key={i} className="border-t border-white/[0.05]">
+                        <td className="px-3 py-1.5 font-medium text-white">{r.student_name}</td>
+                        <td className="px-3 py-1.5 text-white/50">{r.exam_part || '—'}</td>
+                        <td className="px-3 py-1.5 text-white/50">{r.exam_date || '—'}</td>
+                        <td className="px-3 py-1.5 text-white/50">{r.score ?? '—'}</td>
                         <td className="px-3 py-1.5">{statusBadge(r.result_status)}</td>
                       </tr>
                     ))}
@@ -1430,7 +1409,7 @@ function ResultsTab() {
             )}
 
             {uploadMsg && (
-              <div className={`rounded-lg px-4 py-3 text-sm font-semibold ${uploadMsg.ok ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              <div className={`rounded-xl px-4 py-3 text-sm font-semibold ${uploadMsg.ok ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                 {uploadMsg.msg}
               </div>
             )}
@@ -1450,13 +1429,13 @@ function ResultsTab() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total', value: results.length, color: 'bg-blue-50 text-blue-700' },
-          { label: 'Passed', value: results.filter(r => r.result_status === 'pass').length, color: 'bg-emerald-50 text-emerald-700' },
-          { label: 'Failed', value: results.filter(r => r.result_status === 'fail').length, color: 'bg-red-50 text-red-700' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className={`rounded-xl p-3 ${color} border border-current/10`}>
-            <p className="text-xs font-semibold opacity-70">{label}</p>
-            <p className="text-2xl font-black">{value}</p>
+          { label: 'Total', value: results.length, cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+          { label: 'Passed', value: results.filter(r => r.result_status === 'pass').length, cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+          { label: 'Failed', value: results.filter(r => r.result_status === 'fail').length, cls: 'bg-red-500/10 text-red-400 border-red-500/20' },
+        ].map(({ label, value, cls }) => (
+          <div key={label} className={`rounded-2xl p-4 border ${cls}`}>
+            <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">{label}</p>
+            <p className="text-3xl font-black">{value}</p>
           </div>
         ))}
       </div>
@@ -1464,54 +1443,55 @@ function ResultsTab() {
       {/* ── Filters ── */}
       <div className="flex flex-wrap items-center gap-3">
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search student, institute, exam part…" className="input-clean flex-1 min-w-[200px] text-sm" />
-        <div className="flex gap-1 bg-light-100 rounded-lg p-1">
+          placeholder="Search student, institute, exam part…"
+          className="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.10] text-white placeholder:text-white/25 focus:outline-none focus:border-[#FFD000]/40 transition-colors text-sm" />
+        <div className="flex gap-0.5 bg-white/[0.06] rounded-xl p-1">
           {['all', 'pass', 'fail', 'pending'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded text-xs font-bold capitalize transition-all ${filter === f ? 'bg-dark-950 text-white shadow-sm' : 'text-dark-700 hover:text-dark-950'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${filter === f ? 'bg-[#FFD000] text-[#0a0a0a] shadow-sm' : 'text-white/40 hover:text-white'}`}>
               {f}
             </button>
           ))}
         </div>
         <button onClick={doExportCSV} disabled={!filtered.length}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-950 text-white text-xs font-bold hover:bg-dark-900 disabled:opacity-40">
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-xs font-bold hover:bg-[#ffe44d] disabled:opacity-40 transition-colors">
           <Download size={13}/> Export CSV
         </button>
-        <button onClick={fetchResults} className="p-2 text-dark-600 hover:text-dark-950">
+        <button onClick={fetchResults} className="p-2 text-white/30 hover:text-white transition-colors">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>
         </button>
       </div>
 
       {/* ── Table ── */}
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-dark-600"/></div>
+        <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-[#FFD000]/40"/></div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-dark-600 text-sm">
-          {results.length === 0 ? 'No results published yet. Use the upload section above.' : 'No results match your filters.'}
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-12 text-center">
+          <p className="text-sm text-white/30">{results.length === 0 ? 'No results published yet. Use the upload section above.' : 'No results match your filters.'}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-light-200">
+        <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-light-100 border-b border-light-200">
+              <tr className="bg-white/[0.06] border-b border-white/[0.08]">
                 {['Student Name','Exam Part','Exam Date','Score','Result','Institute','Published'].map(h => (
-                  <th key={h} className="px-3 py-2.5 text-left text-[11px] font-black text-dark-700 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2.5 text-left text-[10px] font-black text-white/50 uppercase tracking-wider whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-light-100">
+            <tbody className="divide-y divide-white/[0.06]">
               {filtered.map(r => (
-                <tr key={r.id} className="hover:bg-light-50">
-                  <td className="px-3 py-2.5 font-semibold text-dark-950 whitespace-nowrap">{r.student_name}</td>
-                  <td className="px-3 py-2.5 text-dark-700">{r.exam_part || '—'}</td>
-                  <td className="px-3 py-2.5 text-dark-700 whitespace-nowrap">{r.exam_date ? new Date(r.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—'}</td>
-                  <td className="px-3 py-2.5 text-dark-700 text-center font-mono">{r.score ?? '—'}</td>
+                <tr key={r.id} className="hover:bg-white/[0.03] transition-colors">
+                  <td className="px-3 py-2.5 font-semibold text-white whitespace-nowrap">{r.student_name}</td>
+                  <td className="px-3 py-2.5 text-white/50">{r.exam_part || '—'}</td>
+                  <td className="px-3 py-2.5 text-white/50 whitespace-nowrap">{r.exam_date ? new Date(r.exam_date + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—'}</td>
+                  <td className="px-3 py-2.5 text-white/50 text-center font-mono font-bold">{r.score ?? '—'}</td>
                   <td className="px-3 py-2.5">{statusBadge(r.result_status)}</td>
-                  <td className="px-3 py-2.5 text-dark-700">
-                    <span className="font-medium">{r.coaching_centers?.name || '—'}</span>
-                    {r.coaching_centers?.city && <span className="text-dark-500 text-xs ml-1">({r.coaching_centers.city})</span>}
+                  <td className="px-3 py-2.5 text-white/60">
+                    <span className="font-medium">{r.coaching_centers?.name || (r.candidate_email ? `📧 ${r.candidate_email}` : '—')}</span>
+                    {r.coaching_centers?.city && <span className="text-white/30 text-xs ml-1">({r.coaching_centers.city})</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-dark-500 text-xs whitespace-nowrap">{r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : '—'}</td>
+                  <td className="px-3 py-2.5 text-white/30 text-xs whitespace-nowrap">{r.uploaded_at ? new Date(r.uploaded_at).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) : '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -1634,13 +1614,13 @@ export default function AdminSlotsUpload({ onClose }) {
       </div>
 
       {/* ── Main content ── */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#0f0f0f]">
         {/* Page header */}
-        <div className="flex items-center gap-3 px-6 h-14 border-b border-light-200 shrink-0 bg-white">
-          {activeTab && <activeTab.icon size={16} className="text-dark-600 shrink-0" />}
-          <h2 className="text-sm font-black text-dark-950 tracking-tight">{activeTab?.label}</h2>
+        <div className="flex items-center gap-3 px-6 h-14 border-b border-white/[0.08] shrink-0">
+          {activeTab && <activeTab.icon size={15} className="text-[#FFD000]/70 shrink-0" />}
+          <h2 className="text-sm font-bold text-white tracking-tight">{activeTab?.label}</h2>
           <div className="ml-auto">
-            <p className="text-[10px] text-dark-500 font-mono">fets.in/?admin=true</p>
+            <p className="text-[10px] text-white/20 font-mono">fets.in/?admin=true</p>
           </div>
         </div>
 
