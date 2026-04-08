@@ -69,10 +69,12 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
 
       if (bookingError) throw bookingError;
 
-      await supabase.from("cma_mock_students").insert({
-        booking_id: booking.id,
-        student_name: leadName,
-      }).catch(() => {});
+      try {
+        await supabase.from("cma_mock_students").insert({
+          booking_id: booking.id,
+          student_name: leadName,
+        });
+      } catch (_) { /* non-critical — booking is already saved */ }
 
       // If online payment selected, redirect to PayU
       if (paymentMethod === "online") {
