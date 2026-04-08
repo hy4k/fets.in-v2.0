@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { MapPin, Phone, X, Mail, Navigation, ArrowRight } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { getPaymentResultFromURL } from './lib/payment';
 import AgentChatOverlay from './components/AgentChatOverlay';
 import PaymentStatusOverlay from './components/PaymentStatusOverlay';
 import CMAMockBookingModal from './components/CMAMockBookingModal';
-import AdminSlotsUpload from './components/AdminSlotsUpload';
 import ChatPanels from './components/ChatPanels';
 import LoginModal from './components/LoginModal';
 import CandidateDashboard from './pages/CandidateDashboard';
@@ -17,14 +16,40 @@ import EarlyAccessSection from './components/sections/EarlyAccessSection';
 import FAQSection from './components/sections/FAQSection';
 import SiteFooter from './components/sections/SiteFooter';
 
+// Lazy-load admin module
+const AdminSlotsUpload = lazy(() => import('./components/AdminSlotsUpload'));
+
+const AdminLoadingScreen = () => (
+  <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+    <div className="text-[#FFD000] animate-pulse text-lg font-bold">Loading Admin…</div>
+  </div>
+);
+
+// ─── Simple pathname router ──────────────────────────────────────────────────
+function getRoute() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  const params = new URLSearchParams(window.location.search);
+  // Support both clean URLs and legacy query params
+  if (path === '/admin' || params.get('admin') === 'true') return 'admin';
+  if (path === '/inst' || params.get('institute') === 'true') return 'institute';
+  if (path === '/etd' || params.get('book') === 'cma') return 'etd';
+  return 'home';
+}
+
+function navigate(route) {
+  const paths = { admin: '/admin', institute: '/inst', etd: '/etd', home: '/' };
+  window.history.pushState({}, '', paths[route] || '/');
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
 export default function App() {
+  const [route, setRoute] = useState(getRoute);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [activeLocationModal, setActiveLocationModal] = useState(null);
   const [activePanel, setActivePanel] = useState(null);
   const [bookingPrefill, setBookingPrefill] = useState(null);
   const [bookingKey, setBookingKey] = useState(0);
-  const [isCMABookingOpen, setIsCMABookingOpen] = useState(false);
-  const [showAdminUpload, setShowAdminUpload] = useState(false);
+  const [isCMABookingOpen, setIsCMABookingOpen] = useState(() => getRoute() === 'etd');
   const [toast, setToast] = useState(null);
   const [adminClicks, setAdminClicks] = useState(0);
 
@@ -32,18 +57,13 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
-  const [showInstituteDashboard, setShowInstituteDashboard] = useState(false);
-  const [showPaymentOverlay, setShowPaymentOverlay] = useState(false);
+  const [showPaymentOverlay, setShowPaymentOverlay] = useState(() => !!getPaymentResultFromURL());
 
-  // URL-based access: ?admin=true opens admin panel, ?book=cma opens booking, ?institute=true opens institute portal
+  // Route handling — listen for back/forward navigation
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('admin') === 'true') setShowAdminUpload(true);
-    if (params.get('book') === 'cma') setIsCMABookingOpen(true);
-    if (params.get('institute') === 'true') setShowInstituteDashboard(true);
-    // Check if returning from PayU payment
-    const paymentResult = getPaymentResultFromURL();
-    if (paymentResult) setShowPaymentOverlay(true);
+    const onPop = () => setRoute(getRoute());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   // Auth session
@@ -68,7 +88,7 @@ export default function App() {
     const next = adminClicks + 1;
     setAdminClicks(next);
     if (next >= 5) {
-      setShowAdminUpload(true);
+      navigate('admin');
       setAdminClicks(0);
     }
     setTimeout(() => setAdminClicks(0), 2000);
@@ -101,6 +121,27 @@ export default function App() {
     setShowDashboard(false);
   };
 
+  // ─── Admin route ─────────────────────────────────────────────────────────────
+  if (route === 'admin') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a]">
+        <Suspense fallback={<AdminLoadingScreen />}>
+          <AdminSlotsUpload onClose={() => navigate('home')} />
+        </Suspense>
+      </div>
+    );
+  }
+
+  // ─── Institute route ─────────────────────────────────────────────────────────
+  if (route === 'institute') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a]">
+        <InstituteDashboard onClose={() => navigate('home')} />
+      </div>
+    );
+  }
+
+  // ─── Home route (default) ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-white">
       <SiteHeader
@@ -124,7 +165,11 @@ export default function App() {
 
       <SiteFooter onOpenCalicut={() => setActiveLocationModal('calicut')} onOpenKochi={() => setActiveLocationModal('kochi')} />
 
-      <CMAMockBookingModal isOpen={isCMABookingOpen} onClose={() => setIsCMABookingOpen(false)} showToast={showToast} />
+      <CMAMockBookingModal
+        isOpen={isCMABookingOpen}
+        onClose={() => { setIsCMABookingOpen(false); if (route === 'etd') navigate('home'); }}
+        showToast={showToast}
+      />
 
       {/* Payment status overlay — auto-shown when returning from PayU */}
       {showPaymentOverlay && (
@@ -133,8 +178,6 @@ export default function App() {
           onRetry={() => { setShowPaymentOverlay(false); setIsCMABookingOpen(true); }}
         />
       )}
-
-      {showAdminUpload && <AdminSlotsUpload onClose={() => setShowAdminUpload(false)} />}
 
       {/* Auth modals */}
       {showLoginModal && (
@@ -149,11 +192,6 @@ export default function App() {
           onLogout={handleLogout}
           onOpenChat={() => { setShowDashboard(false); setIsChatOpen(true); }}
         />
-      )}
-
-      {/* Institute dashboard overlay */}
-      {showInstituteDashboard && (
-        <InstituteDashboard onClose={() => setShowInstituteDashboard(false)} />
       )}
 
       {toast && (

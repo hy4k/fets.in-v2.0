@@ -1529,34 +1529,36 @@ export default function AdminSlotsUpload({ onClose }) {
   /* ── Login screen ── */
   if (!authenticated) {
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#0a0a0a]/95 backdrop-blur-sm p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8 border border-light-200">
-          <div className="mb-6 text-center">
-            <div className="w-12 h-12 rounded-xl bg-dark-950 flex items-center justify-center mx-auto mb-3">
-              <Eye size={22} className="text-[#FFD000]"/>
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" style={{ background: 'linear-gradient(145deg, #080810 0%, #0c0c14 50%, #0a0a12 100%)' }}>
+        {/* Ambient glow */}
+        <div className="pointer-events-none fixed inset-0" aria-hidden>
+          <div className="absolute top-[20%] left-[30%] w-[400px] h-[400px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #FFD000, transparent 70%)' }} />
+        </div>
+        <div className="relative w-full max-w-sm rounded-3xl p-8" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(40px) saturate(180%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 60px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4)' }}>
+          <div className="mb-8 text-center">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'linear-gradient(135deg, #FFD000, #f5a623)', boxShadow: '0 8px 30px rgba(255,208,0,0.25), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+              <Eye size={24} className="text-[#0a0a0a]"/>
             </div>
-            <h3 className="text-lg font-bold text-dark-950">Admin Access</h3>
-            <p className="text-sm text-dark-800 mt-1">Enter your admin password to continue.</p>
+            <h3 className="text-xl font-black text-white">Admin Access</h3>
+            <p className="text-sm text-white/40 mt-2">Enter your admin password to continue.</p>
           </div>
-          <div className="relative mb-3">
+          <div className="relative mb-4">
             <input
               type={showPw ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && authenticate()}
               placeholder="Admin password"
-              className="input-clean pr-10 font-mono tracking-widest"
+              className="w-full px-4 py-3.5 rounded-2xl text-white font-mono tracking-widest text-sm focus:outline-none pr-12 transition-all"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)' }}
               autoFocus
             />
-            <button onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-800 hover:text-dark-950">
-              {showPw ? <EyeOff size={15}/> : <Eye size={15}/>}
+            <button onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+              {showPw ? <EyeOff size={16}/> : <Eye size={16}/>}
             </button>
           </div>
-          {authError && <p className="text-red-500 text-xs mb-3 text-center">{authError}</p>}
-          <button onClick={authenticate} className="btn-primary w-full h-11">Login</button>
-          <p className="text-center text-[10px] text-dark-600 mt-4">
-            Password: <span className="font-mono">fets@in</span>
-          </p>
+          {authError && <p className="text-red-400 text-xs mb-3 text-center font-semibold">{authError}</p>}
+          <button onClick={authenticate} className="w-full h-12 rounded-2xl font-black text-sm text-[#0a0a0a] transition-all" style={{ background: 'linear-gradient(135deg, #FFD000, #f5a623)', boxShadow: '0 4px 20px rgba(255,208,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3)' }}>Enter Command Centre</button>
         </div>
       </div>
     );
@@ -1564,75 +1566,109 @@ export default function AdminSlotsUpload({ onClose }) {
 
   const activeTab = TABS.find(t => t.id === tab);
 
-  /* ── Full-page admin dashboard ── */
+  /* ── Full-page admin dashboard with liquid glass + neumorphism ── */
   return (
-    <div className="fixed inset-0 z-[70] flex">
+    <div className="fixed inset-0 z-[70] flex" style={{ background: 'linear-gradient(145deg, #080810 0%, #0c0c14 40%, #0a0a12 100%)' }}>
+      {/* Ambient glow orbs */}
+      <div className="pointer-events-none fixed inset-0" aria-hidden>
+        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #FFD000, transparent 70%)' }} />
+        <div className="absolute bottom-[-15%] right-[-5%] w-[600px] h-[600px] rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #00d4ff, transparent 70%)' }} />
+        <div className="absolute top-[40%] left-[35%] w-[400px] h-[400px] rounded-full opacity-[0.02]" style={{ background: 'radial-gradient(circle, #8b5cf6, transparent 70%)' }} />
+      </div>
 
-      {/* ── Sidebar ── */}
-      <div className="w-52 xl:w-60 bg-[#0e0e0e] border-r border-white/[0.06] flex flex-col shrink-0">
+      {/* ── Sidebar — liquid glass ── */}
+      <div className="relative w-56 xl:w-64 flex flex-col shrink-0 border-r border-white/[0.06]" style={{ background: 'rgba(12, 12, 20, 0.85)', backdropFilter: 'blur(40px) saturate(180%)' }}>
+        {/* Neumorphic inner highlight */}
+        <div className="absolute inset-0 rounded-none pointer-events-none" style={{ boxShadow: 'inset 1px 0 0 rgba(255,255,255,0.04), inset -1px 0 0 rgba(0,0,0,0.3)' }} />
+
         {/* Brand */}
-        <div className="px-5 py-5 border-b border-white/[0.06]">
-          <p className="text-[#FFD000] font-black text-lg tracking-tight leading-none">FETS</p>
-          <p className="text-white/30 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Admin Panel</p>
+        <div className="relative px-5 py-6 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #FFD000, #f5a623)', boxShadow: '0 4px 20px rgba(255,208,0,0.25), inset 0 1px 0 rgba(255,255,255,0.3)' }}>
+              <span className="text-[#0a0a0a] font-black text-sm">F</span>
+            </div>
+            <div>
+              <p className="text-white font-black text-base tracking-tight leading-none">FETS</p>
+              <p className="text-white/25 text-[9px] font-bold uppercase tracking-[0.25em] mt-1">Command Centre</p>
+            </div>
+          </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          {TABS.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${
-                tab === t.id
-                  ? 'bg-[#FFD000] text-[#0a0a0a]'
-                  : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
-              }`}
-            >
-              <t.icon size={15} className="shrink-0" />
-              <span className="truncate">{t.label}</span>
-            </button>
-          ))}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {TABS.map(t => {
+            const isActive = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-[13px] font-semibold transition-all text-left group ${
+                  isActive
+                    ? 'text-[#0a0a0a]'
+                    : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
+                }`}
+                style={isActive ? {
+                  background: 'linear-gradient(135deg, #FFD000, #f5a623)',
+                  boxShadow: '0 4px 20px rgba(255,208,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 3px rgba(0,0,0,0.3)',
+                } : {}}
+              >
+                <t.icon size={16} className={`shrink-0 ${isActive ? '' : 'opacity-50 group-hover:opacity-80'}`} />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {/* Supabase warning */}
         {!isSupabaseConfigured && (
-          <div className="mx-2 mb-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2">
+          <div className="mx-3 mb-3 rounded-2xl px-3 py-2.5" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.15)' }}>
             <p className="text-amber-400 text-[10px] font-bold leading-snug">⚠ Supabase not configured</p>
           </div>
         )}
 
         {/* Exit */}
-        <div className="px-2 py-3 border-t border-white/[0.06]">
+        <div className="px-3 py-4 border-t border-white/[0.05]">
           <button
             onClick={onClose}
-            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-white/30 hover:text-white hover:bg-white/[0.06] transition-all"
+            className="w-full flex items-center gap-2.5 px-3.5 py-3 rounded-2xl text-xs font-semibold text-white/25 hover:text-white/70 transition-all"
+            style={{ background: 'rgba(255,255,255,0.02)' }}
           >
             <X size={14} className="shrink-0" />
-            Close Admin
+            Exit Admin
           </button>
         </div>
       </div>
 
-      {/* ── Main content ── */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#0f0f0f]">
-        {/* Page header */}
-        <div className="flex items-center gap-3 px-6 h-14 border-b border-white/[0.08] shrink-0">
-          {activeTab && <activeTab.icon size={15} className="text-[#FFD000]/70 shrink-0" />}
-          <h2 className="text-sm font-bold text-white tracking-tight">{activeTab?.label}</h2>
-          <div className="ml-auto">
-            <p className="text-[10px] text-white/20 font-mono">fets.in/?admin=true</p>
+      {/* ── Main content — glass surface ── */}
+      <div className="relative flex-1 flex flex-col min-w-0">
+        {/* Page header — frosted glass bar */}
+        <div className="flex items-center gap-3 px-8 h-16 border-b border-white/[0.06] shrink-0" style={{ background: 'rgba(14, 14, 22, 0.7)', backdropFilter: 'blur(20px)' }}>
+          <div className="flex items-center gap-3">
+            {activeTab && (
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,208,0,0.08)', border: '1px solid rgba(255,208,0,0.12)' }}>
+                <activeTab.icon size={14} className="text-[#FFD000]" />
+              </div>
+            )}
+            <h2 className="text-base font-bold text-white tracking-tight">{activeTab?.label}</h2>
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <div className="px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-[10px] text-white/20 font-mono">fets.in/admin</p>
+            </div>
           </div>
         </div>
 
-        {/* Tab content */}
+        {/* Tab content — wrapped in a glass panel */}
         <div className="flex-1 overflow-y-auto p-6 xl:p-8">
-          {tab === 'leads'      && <LeadsTab />}
-          {tab === 'cma'        && <CmaRequestsTab />}
-          {tab === 'bookings'   && <BookingsTab />}
-          {tab === 'institutes' && <InstitutesTab />}
-          {tab === 'results'    && <ResultsTab />}
-          {tab === 'manage'     && <ManageTab />}
-          {tab === 'upload'     && <UploadTab />}
+          <div className="rounded-3xl p-6 xl:p-8" style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 40px rgba(0,0,0,0.3)' }}>
+            {tab === 'leads'      && <LeadsTab />}
+            {tab === 'cma'        && <CmaRequestsTab />}
+            {tab === 'bookings'   && <BookingsTab />}
+            {tab === 'institutes' && <InstitutesTab />}
+            {tab === 'results'    && <ResultsTab />}
+            {tab === 'manage'     && <ManageTab />}
+            {tab === 'upload'     && <UploadTab />}
+          </div>
         </div>
       </div>
     </div>

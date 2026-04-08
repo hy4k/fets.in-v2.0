@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Menu, X, MapPin, LogIn } from 'lucide-react';
 
 const NAV_MOBILE = [
-  { href: '#mock-exams', label: 'Exam Test Drive' },
   { href: '#register', label: 'Early Access' },
   { href: '#faq', label: 'FAQ' },
 ];
@@ -80,15 +79,7 @@ export default function SiteHeader({ onOpenChat, onOpenCalicut, onOpenKochi, onO
               </button>
             </div>
 
-            {/* Centre: Exam Test Drive */}
-            <div className="flex gap-2">
-              <a
-                href="#mock-exams"
-                className="inline-flex items-center h-10 px-5 rounded-lg bg-[#FFD000] text-[#0a0a0a] text-sm font-black hover:bg-[#ffe44d] transition-all shadow-[0_4px_16px_rgba(255,208,0,0.2)]"
-              >
-                Exam Test Drive
-              </a>
-            </div>
+
 
             {/* Right: Early Access + Login/User */}
             <div className="flex items-center gap-2">
