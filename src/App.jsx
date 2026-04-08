@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Phone, X, Mail, Navigation, ArrowRight } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { getPaymentResultFromURL } from './lib/payment';
 import AgentChatOverlay from './components/AgentChatOverlay';
+import PaymentStatusOverlay from './components/PaymentStatusOverlay';
 import CMAMockBookingModal from './components/CMAMockBookingModal';
 import AdminSlotsUpload from './components/AdminSlotsUpload';
 import ChatPanels from './components/ChatPanels';
@@ -31,6 +33,7 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showInstituteDashboard, setShowInstituteDashboard] = useState(false);
+  const [showPaymentOverlay, setShowPaymentOverlay] = useState(false);
 
   // URL-based access: ?admin=true opens admin panel, ?book=cma opens booking, ?institute=true opens institute portal
   useEffect(() => {
@@ -38,6 +41,9 @@ export default function App() {
     if (params.get('admin') === 'true') setShowAdminUpload(true);
     if (params.get('book') === 'cma') setIsCMABookingOpen(true);
     if (params.get('institute') === 'true') setShowInstituteDashboard(true);
+    // Check if returning from PayU payment
+    const paymentResult = getPaymentResultFromURL();
+    if (paymentResult) setShowPaymentOverlay(true);
   }, []);
 
   // Auth session
@@ -119,6 +125,14 @@ export default function App() {
       <SiteFooter onOpenCalicut={() => setActiveLocationModal('calicut')} onOpenKochi={() => setActiveLocationModal('kochi')} />
 
       <CMAMockBookingModal isOpen={isCMABookingOpen} onClose={() => setIsCMABookingOpen(false)} showToast={showToast} />
+
+      {/* Payment status overlay — auto-shown when returning from PayU */}
+      {showPaymentOverlay && (
+        <PaymentStatusOverlay
+          onClose={() => setShowPaymentOverlay(false)}
+          onRetry={() => { setShowPaymentOverlay(false); setIsCMABookingOpen(true); }}
+        />
+      )}
 
       {showAdminUpload && <AdminSlotsUpload onClose={() => setShowAdminUpload(false)} />}
 

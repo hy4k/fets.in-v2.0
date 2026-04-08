@@ -74,6 +74,34 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
         student_name: leadName,
       }).catch(() => {});
 
+      // If online payment selected, redirect to PayU
+      if (paymentMethod === "online") {
+        try {
+          const { initiatePayment, redirectToPayU } = await import("../lib/payment");
+          const result = await initiatePayment({
+            bookingId: booking.id,
+            bookingTable: "cma_mock_bookings",
+            amount: 2500,
+            customerName: leadName,
+            customerEmail: leadEmail,
+            customerPhone: leadPhone,
+            productInfo: `FETS CMA Mock Exam - ${examPart}`,
+          });
+
+          if (result.success && result.payu_url && result.payu_params) {
+            // Redirect to PayU payment page
+            redirectToPayU(result.payu_url, result.payu_params);
+            return; // Don't setLoading(false) — we're navigating away
+          } else {
+            throw new Error(result.error || "Payment initiation failed");
+          }
+        } catch (payErr) {
+          console.error("Payment error:", payErr);
+          setError(`Payment initiation failed: ${payErr.message}. Your booking is saved — you can pay at the center.`);
+          // Fall through to show confirmation code (booking is saved regardless)
+        }
+      }
+
       setConfirmationCode(code);
       setFlow("success");
     } catch (err) {
