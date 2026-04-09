@@ -607,7 +607,7 @@ function LeadsTab() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetch = useCallback(async () => {
+  const fetchLeads = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
     const { data } = await supabase
@@ -619,33 +619,67 @@ function LeadsTab() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
-
-  const cols = [
-    { key: 'created_at', label: 'Date', render: v => v ? new Date(v).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'2-digit' }) : '—' },
-    { key: 'full_name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'interested_exam', label: 'Exam' },
-  ];
+  useEffect(() => { void fetchLeads(); }, [fetchLeads]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8 pt-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-white">{rows.length} <span className="text-white/40 font-normal">registrations</span></p>
-        <div className="flex gap-2">
-          <button onClick={fetch} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
+        <div>
+          <p className="text-xl font-black text-white tracking-tight">Early Access Leads</p>
+          <p className="text-xs text-white/40 mt-1 font-medium">Waitlist and expression of interest</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={fetchLeads} className="flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white transition-colors">
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''}/> Refresh
           </button>
-          <button onClick={() => exportCSV(rows, 'fets-leads.csv')} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-colors">
-            <Download size={12}/> Export CSV
+          <button onClick={() => exportCSV(rows, 'fets-leads.csv')} className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl bg-[#FFD000] text-[#0a0a0a] hover:bg-[#ffe44d] transition-all shadow-[0_4px_20px_rgba(255,208,0,0.2)]">
+            <Download size={13}/> Export CSV
           </button>
         </div>
       </div>
-      {loading
-        ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-[#FFD000]/40"/></div>
-        : <DataTable columns={cols} rows={rows} emptyMsg="No early access registrations yet." />
-      }
+
+      {loading ? (
+        <div className="flex justify-center py-16"><Loader2 size={26} className="animate-spin text-[#FFD000]/40"/></div>
+      ) : rows.length === 0 ? (
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-8 py-16 text-center text-sm text-white/30 font-medium">No early access registrations yet.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          {rows.map(row => (
+            <div key={row.id} className="group relative rounded-3xl border border-white/[0.06] bg-white/[0.02] overflow-hidden transition-all hover:bg-white/[0.03] hover:border-white/[0.1] shadow-xl p-5">
+               <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-[#FFD000] blur-[40px] opacity-[0.03] group-hover:opacity-[0.08] transition-all pointer-events-none" style={{ transform: 'translate(30%, -30%)' }} />
+               
+               <div className="relative z-10">
+                 <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-[14px] bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+                        <span className="font-black text-[#FFD000] text-sm">{row.full_name?.charAt(0)?.toUpperCase()}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-[15px] leading-tight">{row.full_name}</h4>
+                        <p className="text-[10px] font-semibold text-[#FFD000]/80 tracking-widest uppercase mt-0.5">{row.interested_exam || 'UNKNOWN'}</p>
+                      </div>
+                    </div>
+                 </div>
+
+                 <div className="space-y-3 pt-4 border-t border-white/[0.04]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-white/30">Email</span>
+                      <span className="text-xs font-medium text-white/80 select-all">{row.email || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-white/30">Phone</span>
+                      <span className="text-xs font-medium text-white/80 select-all">{row.phone || '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-white/30">Date</span>
+                      <span className="text-xs font-medium text-white/80">{new Date(row.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' })}</span>
+                    </div>
+                 </div>
+               </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -826,6 +860,124 @@ function CmaRequestsTab() {
             </div>
           ))
       }
+    </div>
+  );
+}
+
+// ─── Dashboard Tab ────────────────────────────────────────────────────────────
+
+function DashboardTab() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white tracking-tight">Overview</h2>
+      </div>
+      <div className="rounded-2xl border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)' }}>
+        <div className="p-8 text-center text-white/50">
+           Welcome to FETS Command Centre. This dashboard will contain the overview metrics in later phases.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Calendar Tab ─────────────────────────────────────────────────────────────
+
+function CalendarTab() {
+  const [slots, setSlots] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from('mock_exam_slots').select('*').order('date', { ascending: true })
+      .then(({ data }) => { setSlots(data || []); setLoading(false); });
+  }, []);
+
+  const getOccupancy = (s) => (s.booked_seats / s.total_seats) * 100;
+
+  if (loading) return <div className="text-center p-8 text-white/50 animate-pulse">Loading schedule...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black tracking-tight text-white">Exam Calendar</h2>
+          <p className="text-sm text-white/40 mt-1">Live slot occupancy and schedule</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {slots.map(s => {
+          const occ = getOccupancy(s);
+          return (
+            <div key={s.id} className="relative rounded-2xl p-5 border border-white/[0.08] overflow-hidden group" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"/>
+              <div className="flex items-start justify-between mb-4 relative">
+                <div>
+                  <div className="text-[#FFD000] font-black text-xs tracking-widest uppercase mb-1">{fmtDate(s.date)}</div>
+                  <div className="text-white font-bold">{s.time_slot}</div>
+                  <div className="text-white/40 text-xs mt-0.5">{s.center}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-black text-white">{s.booked_seats}<span className="text-white/40 text-sm">/{s.total_seats}</span></div>
+                  <div className="text-[10px] text-white/40 uppercase font-bold mt-1 tracking-widest">Booked</div>
+                </div>
+              </div>
+              <div className="h-1.5 w-full bg-white/[0.06] rounded-full overflow-hidden relative">
+                <div className="h-full bg-gradient-to-r from-[#FFD000] to-[#f5a623] rounded-full" style={{ width: `${occ}%` }}/>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Candidates Tab ───────────────────────────────────────────────────────────
+
+function CandidatesTab() {
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from('cma_mock_bookings')
+      .select('*, coaching_centers(name)')
+      .eq('booking_type', 'direct')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { setCandidates(data || []); setLoading(false); });
+  }, []);
+
+  if (loading) return <div className="text-center p-8 text-white/50 animate-pulse">Loading candidates...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-black tracking-tight text-white">Candidates</h2>
+          <p className="text-sm text-white/40 mt-1">Direct bookings roster</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {candidates.map(r => (
+            <div key={r.id} className="rounded-2xl p-5 border border-white/[0.08]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="font-bold text-white max-w-[150px] truncate">{r.lead_name || '—'}</h3>
+                {r.confirmation_code && <span className="font-mono text-xs font-bold text-[#FFD000] py-0.5 px-2 bg-[#FFD000]/10 rounded-full">{r.confirmation_code}</span>}
+              </div>
+              <div className="space-y-1.5 text-xs text-white/60">
+                <p>📧 {r.lead_email || '—'}</p>
+                <p>📞 {r.lead_phone || '—'}</p>
+                <p>📅 {fmtDate(r.exam_date)}</p>
+                <p>⏰ {r.session_time}</p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-white/40">
+                 <span>{r.exam_part || 'Full'}</span>
+                 <StatusBadge value={r.payment_status} />
+              </div>
+            </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1505,13 +1657,12 @@ function ResultsTab() {
 // ─── Root Component ───────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'leads',      label: 'Leads',          icon: Bell,      count: true },
-  { id: 'cma',        label: 'CMA Requests',   icon: BookOpen,  count: true },
-  { id: 'bookings',   label: 'Slot Bookings',  icon: Users,     count: true },
-  { id: 'institutes', label: 'Institutes',     icon: Building2, count: true },
-  { id: 'results',    label: 'Results',        icon: Trophy,    count: true },
-  { id: 'manage',     label: 'Manage Seats',   icon: Edit3 },
-  { id: 'upload',     label: 'Upload Excel',   icon: Table2 },
+  { id: 'dashboard',  label: 'Dashboard',   icon: Trophy },
+  { id: 'calendar',   label: 'Exam Calendar', icon: BookOpen },
+  { id: 'candidates', label: 'Candidates',  icon: Users },
+  { id: 'institutes', label: 'Institutes',  icon: Building2 },
+  { id: 'leads',      label: 'Leads',       icon: Bell },
+  { id: 'results',    label: 'Results',     icon: Table2 },
 ];
 
 export default function AdminSlotsUpload({ onClose }) {
@@ -1519,7 +1670,7 @@ export default function AdminSlotsUpload({ onClose }) {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw]     = useState(false);
   const [authError, setAuthError] = useState('');
-  const [tab, setTab] = useState('leads');
+  const [tab, setTab] = useState('dashboard');
 
   const authenticate = () => {
     if (password === ADMIN_PASSWORD) { setAuthenticated(true); setAuthError(''); }
@@ -1661,13 +1812,12 @@ export default function AdminSlotsUpload({ onClose }) {
         {/* Tab content — wrapped in a glass panel */}
         <div className="flex-1 overflow-y-auto p-6 xl:p-8">
           <div className="rounded-3xl p-6 xl:p-8" style={{ background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 40px rgba(0,0,0,0.3)' }}>
-            {tab === 'leads'      && <LeadsTab />}
-            {tab === 'cma'        && <CmaRequestsTab />}
-            {tab === 'bookings'   && <BookingsTab />}
+            {tab === 'dashboard'  && <DashboardTab />}
+            {tab === 'calendar'   && <CalendarTab />}
+            {tab === 'candidates' && <CandidatesTab />}
             {tab === 'institutes' && <InstitutesTab />}
+            {tab === 'leads'      && <LeadsTab />}
             {tab === 'results'    && <ResultsTab />}
-            {tab === 'manage'     && <ManageTab />}
-            {tab === 'upload'     && <UploadTab />}
           </div>
         </div>
       </div>

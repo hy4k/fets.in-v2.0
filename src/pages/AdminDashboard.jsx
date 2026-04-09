@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
   Users, Building2, Bell, BookOpen, Trophy, Table2, 
-  RefreshCw, LogOut, ChevronRight, Mail, Phone, Calendar as CalIcon, CreditCard, ChevronDown, CheckCircle, Search
+  RefreshCw, LogOut, ChevronRight, Mail, Phone, Calendar as CalIcon, CreditCard, ChevronDown, CheckCircle, Search, Zap
 } from 'lucide-react';
 function BgBlobs() {
   return (
@@ -73,7 +73,8 @@ export default function AdminDashboard({ onClose }) {
     { id: 'calendar', icon: BookOpen, label: 'Exam Calendar' },
     { id: 'candidates', icon: Users, label: 'Individuals' },
     { id: 'institutes', icon: Building2, label: 'Institutes' },
-    { id: 'leads', icon: Bell, label: 'Early Access' },
+    { id: 'leads', icon: Mail, label: 'Enquiries / Leads' },
+    { id: 'early_access', icon: Zap, label: 'Early Access' },
     { id: 'results', icon: Table2, label: 'Results' }
   ];
 
@@ -136,7 +137,8 @@ export default function AdminDashboard({ onClose }) {
            {activeTab === 'calendar' && <CalendarView />}
            {activeTab === 'candidates' && <CandidatesView />}
            {activeTab === 'institutes' && <InstitutesView />}
-           {activeTab === 'leads' && <LeadsView />}
+           {activeTab === 'leads' && <EnquiriesView />}
+           {activeTab === 'early_access' && <LeadsView />}
            {activeTab === 'results' && <ResultsView />}
         </div>
       </main>
@@ -364,6 +366,55 @@ function InstitutesView() {
              </div>
            );
          })}
+      </div>
+    </div>
+  );
+}
+
+function EnquiriesView() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase.from('enquiries').select('*').order('created_at', { ascending: false });
+    if(data) setRows(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return (
+    <div className="space-y-6">
+       <div className="flex justify-between items-center">
+        <p className="text-white/50 text-sm">{rows.length} general enquiries found.</p>
+        <button onClick={fetchData} className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06]"><RefreshCw size={16} className={loading?'animate-spin text-[#FFD000]':'text-white/40'}/></button>
+      </div>
+      <div className="space-y-4">
+        {rows.map(r => (
+          <div key={r.id} className={`p-6 rounded-2xl ${GLASS} flex flex-col md:flex-row md:items-center justify-between gap-4`}>
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20 text-violet-400 font-black">
+                   <Mail size={24} />
+                </div>
+                <div>
+                   <h4 className="font-bold text-lg">{r.name}</h4>
+                   <p className="text-xs text-white/40">{r.email} • {r.phone}</p>
+                </div>
+             </div>
+             <div className="flex-1 px-4">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFD000] mb-1">Interest: {r.exam_interest || 'General'}</div>
+                <p className="text-sm text-white/60 line-clamp-2 italic">"{r.message}"</p>
+             </div>
+             <div className="text-right">
+                <div className="text-[11px] font-bold text-white/30 uppercase tracking-widest mb-1">{new Date(r.created_at).toLocaleDateString()}</div>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest">{r.status}</span>
+             </div>
+          </div>
+        ))}
+        {rows.length === 0 && <div className="p-20 text-center text-white/20 text-sm font-bold uppercase tracking-widest">No enquiries recorded</div>}
       </div>
     </div>
   );
