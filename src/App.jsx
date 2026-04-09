@@ -16,7 +16,8 @@ import EarlyAccessSection from './components/sections/EarlyAccessSection';
 import FAQSection from './components/sections/FAQSection';
 import SiteFooter from './components/sections/SiteFooter';
 
-// Lazy-load admin module
+// Lazy-load dashboard pages
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminSlotsUpload = lazy(() => import('./components/AdminSlotsUpload'));
 
 const AdminLoadingScreen = () => (
@@ -126,7 +127,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0a0a0a]">
         <Suspense fallback={<AdminLoadingScreen />}>
-          <AdminSlotsUpload onClose={() => navigate('home')} />
+          <AdminDashboard onClose={() => navigate('home')} />
         </Suspense>
       </div>
     );
