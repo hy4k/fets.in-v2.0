@@ -4,7 +4,16 @@ import {
   Users, Building2, Bell, BookOpen, Trophy, Table2, 
   RefreshCw, LogOut, ChevronRight, Mail, Phone, Calendar as CalIcon, CreditCard, ChevronDown, CheckCircle, Search
 } from 'lucide-react';
-import BgBlobs from '../components/InstituteDashboard/BgBlobs';
+function BgBlobs() {
+  return (
+    <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+      <div className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[#FFD000]/[0.07] blur-[130px] animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-[20%] -right-60 w-[600px] h-[600px] rounded-full bg-blue-500/[0.06] blur-[120px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '2s' }} />
+      <div className="absolute -bottom-40 left-[25%] w-[500px] h-[500px] rounded-full bg-violet-600/[0.05] blur-[110px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '4s' }} />
+      <div className="absolute top-[60%] left-[50%] w-[400px] h-[400px] rounded-full bg-teal-500/[0.04] blur-[100px]" />
+    </div>
+  );
+}
 
 const ADMIN_PASSWORD = 'fets@in';
 const GLASS = "bg-white/[0.02] border border-white/[0.05] backdrop-blur-[40px] saturate-150";
