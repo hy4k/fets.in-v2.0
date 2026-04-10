@@ -162,12 +162,7 @@ function CalendarView() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (mounted) await fetchSlots();
-    };
-    load();
-    return () => { mounted = false; };
+    fetchSlots().catch(console.error);
   }, [fetchSlots]);
 
   return (
@@ -230,39 +225,67 @@ function CandidatesView() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (mounted) await fetchData();
-    };
-    load().catch(console.error);
-    return () => { mounted = false; };
+    fetchData();
   }, [fetchData]);
+
+  const handleSyncSingle = async (booking) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('costudy-sync', {
+        body: booking
+      });
+      if (error) throw error;
+      
+      await supabase.from('cma_mock_bookings').update({
+        costudy_sync_status: 'synced',
+        costudy_booking_id: data?.booking_id,
+        last_sync_error: null
+      }).eq('id', booking.id);
+      fetchData();
+    } catch (err) {
+      console.error("Manual sync failed:", err);
+      await supabase.from('cma_mock_bookings').update({ 
+        costudy_sync_status: 'failed', 
+        last_sync_error: err.message 
+      }).eq('id', booking.id);
+      fetchData();
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <p className="text-white/50 text-sm">{rows.length} individual bookings found.</p>
-        <button onClick={fetchData} className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06]"><RefreshCw size={16} className={loading?'animate-spin text-[#FFD000]':'text-white/40'}/></button>
+        <button onClick={fetchData} className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06]">
+          <RefreshCw size={16} className={loading?'animate-spin text-[#FFD000]':'text-white/40'}/>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {rows.map(r => (
-          <div key={r.id} className={`p-5 rounded-2xl ${GLASS} flex flex-col`}>
+          <div key={r.id} className={`p-5 rounded-2xl ${GLASS} flex flex-col group`}>
              <div className="flex justify-between items-start mb-4">
-               <div>
-                  <h4 className="font-bold text-lg mb-1">{r.lead_name || 'Individual'}</h4>
-                  <div className="flex gap-2">
-                    <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-white/[0.05] text-white/70 tracking-widest">{r.exam_part}</span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest ${r.payment_status === 'paid' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-500'}`}>{r.payment_status}</span>
-                  </div>
-               </div>
-               {r.confirmation_code && <div className="text-xs font-mono bg-[#FFD000]/10 text-[#FFD000] px-2 py-1 rounded-md">{r.confirmation_code}</div>}
+                <div>
+                   <h4 className="font-bold text-lg mb-1">{r.lead_name || 'Individual'}</h4>
+                   <div className="flex flex-wrap gap-2">
+                     <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-white/[0.05] text-white/70 tracking-widest">{r.exam_part}</span>
+                     <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest ${r.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-500'}`}>{r.status}</span>
+                     <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-widest ${r.costudy_sync_status === 'synced' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}>{r.costudy_sync_status || 'pending'}</span>
+                   </div>
+                </div>
+                <button 
+                  onClick={() => handleSyncSingle(r)}
+                  className="opacity-0 group-hover:opacity-100 p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
+                  title="Sync to CoStudy"
+                >
+                  <Zap size={14} />
+                </button>
              </div>
              
              <div className="space-y-2 text-sm text-white/50 mt-auto pt-4 border-t border-white/[0.05]">
                 <div className="flex items-center gap-2"><Mail size={14} className="shrink-0"/> <span className="truncate">{r.lead_email}</span></div>
                 <div className="flex items-center gap-2"><Phone size={14} className="shrink-0"/> <span className="truncate">{r.lead_phone}</span></div>
                 <div className="flex items-center gap-2"><CalIcon size={14} className="shrink-0"/> <span className="truncate">{r.preferred_date} • {r.session_time}</span></div>
+                {r.last_sync_error && <p className="text-[10px] text-red-500/70 italic mt-2 line-clamp-1">Error: {r.last_sync_error}</p>}
              </div>
           </div>
         ))}
@@ -279,8 +302,6 @@ function InstitutesView() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    // Modified to fetch from cma_mock_bookings for institutional bookings
-    // Assuming coachings center name is in lead_name or joined
     const { data } = await supabase.from('cma_mock_bookings')
       .select('*, coaching_centers(name, city)')
       .eq('booking_type', 'institutional')
@@ -290,12 +311,7 @@ function InstitutesView() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (mounted) await fetchData();
-    };
-    load().catch(console.error);
-    return () => { mounted = false; };
+    fetchData();
   }, [fetchData]);
 
   const toggleRoster = async (id) => {
@@ -307,11 +323,36 @@ function InstitutesView() {
     setExpandedId(id);
   };
 
+  const handleSyncSingle = async (booking) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('costudy-sync', {
+        body: booking
+      });
+      if (error) throw error;
+      
+      await supabase.from('cma_mock_bookings').update({
+        costudy_sync_status: 'synced',
+        costudy_booking_id: data?.booking_id,
+        last_sync_error: null
+      }).eq('id', booking.id);
+      fetchData();
+    } catch (err) {
+      console.error("Manual sync failed:", err);
+      await supabase.from('cma_mock_bookings').update({ 
+        costudy_sync_status: 'failed', 
+        last_sync_error: err.message 
+      }).eq('id', booking.id);
+      fetchData();
+    }
+  };
+
   return (
     <div className="space-y-6">
        <div className="flex justify-between items-center">
         <p className="text-white/50 text-sm">{rows.length} institutional bookings found.</p>
-        <button onClick={fetchData} className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06]"><RefreshCw size={16} className={loading?'animate-spin text-[#FFD000]':'text-white/40'}/></button>
+        <button onClick={fetchData} className="p-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.06]">
+          <RefreshCw size={16} className={loading?'animate-spin text-[#FFD000]':'text-white/40'}/>
+        </button>
       </div>
 
       <div className="space-y-4">
@@ -319,50 +360,67 @@ function InstitutesView() {
            const ccName = r.coaching_centers?.name || r.lead_name || 'Unknown Institute';
            return (
              <div key={r.id} className={`rounded-2xl ${GLASS} overflow-hidden`}>
-               <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors" onClick={() => toggleRoster(r.id)}>
-                  <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-xl bg-[#FFD000]/10 flex items-center justify-center border border-[#FFD000]/20 shrink-0">
-                       <Building2 size={24} className="text-[#FFD000]" />
-                     </div>
-                     <div>
-                       <h4 className="font-bold text-lg leading-tight">{ccName}</h4>
-                       <p className="text-xs text-white/40 mt-1">{r.exam_part} • {r.preferred_date} • {r.session_time}</p>
-                     </div>
-                  </div>
-                  <div className="flex items-center gap-6">
-                     <div className="text-right hidden md:block">
-                       <div className="text-white font-bold">{r.student_count} Candidates</div>
-                       <div className={`text-[10px] font-bold uppercase tracking-widest ${r.payment_status==='paid'?'text-emerald-400':'text-red-400'}`}>{r.payment_status}</div>
-                     </div>
-                     <ChevronDown size={20} className={`text-white/40 transition-transform ${expandedId===r.id ? 'rotate-180':''}`} />
-                  </div>
-               </div>
-               
-               {expandedId === r.id && (
-                 <div className="p-6 border-t border-white/[0.05] bg-white/[0.01]">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-white/[0.02] transition-colors" onClick={() => toggleRoster(r.id)}>
+                   <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-[#FFD000]/10 flex items-center justify-center border border-[#FFD000]/20 shrink-0">
+                        <Building2 size={24} className="text-[#FFD000]" />
+                      </div>
                       <div>
-                        <h5 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-3">Booking Details</h5>
-                        <div className="space-y-2 text-sm text-white/70">
-                          {r.confirmation_code && <div className="flex justify-between"><span>Confirmation Code:</span><span className="font-mono text-[#FFD000]">{r.confirmation_code}</span></div>}
-                          <div className="flex justify-between"><span>Payment Context:</span><span>{r.payment_method}</span></div>
-                          <div className="flex justify-between"><span>Total Enrolled:</span><span>{r.student_count}</span></div>
+                        <h4 className="font-bold text-lg leading-tight">{ccName}</h4>
+                        <p className="text-xs text-white/40 mt-1">{r.exam_part} • {r.preferred_date} • {r.session_time}</p>
+                      </div>
+                   </div>
+                   <div className="flex items-center gap-6">
+                      <div className="text-right hidden md:block">
+                        <div className="text-white font-bold">{r.student_count} Candidates</div>
+                        <div className="flex gap-2 justify-end mt-1">
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-black ${
+                            r.status === 'confirmed' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'
+                          }`}>{r.status || 'pending'}</span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-black ${
+                            r.costudy_sync_status === 'synced' ? 'bg-blue-500/10 text-blue-400' :
+                            r.costudy_sync_status === 'failed' ? 'bg-red-500/10 text-red-400' : 'bg-white/5 text-white/20'
+                          }`}>{r.costudy_sync_status || 'pending'}</span>
                         </div>
                       </div>
-                      <div>
-                        <h5 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-3">Roster list</h5>
-                        <ul className="text-sm text-white/70 space-y-1">
-                          {roster[r.id]?.map((s, i) => (
-                            <li key={i} className="flex gap-2">
-                              <span className="text-white/30">{i+1}.</span> {s.student_name}
-                            </li>
-                          ))}
-                          {!roster[r.id]?.length && <li className="text-white/30">No students found.</li>}
-                        </ul>
-                      </div>
-                    </div>
-                 </div>
-               )}
+                      <ChevronDown size={14} className={`text-white/30 transition-transform ${expandedId === r.id ? 'rotate-180' : ''}`} />
+                   </div>
+                </div>
+                
+                {expandedId === r.id && (
+                  <div className="p-6 border-t border-white/[0.05] bg-white/[0.01]">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div>
+                         <h5 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-3">Booking Details</h5>
+                         <div className="space-y-3 text-sm text-white/70">
+                           {r.confirmation_code && <div className="flex justify-between"><span>Confirmation Code:</span><span className="font-mono text-[#FFD000]">{r.confirmation_code}</span></div>}
+                           <div className="flex justify-between"><span>Payment Context:</span><span className="font-bold">{r.payment_method}</span></div>
+                           <div className="flex justify-between"><span>Total Enrolled:</span><span>{r.student_count}</span></div>
+                           <div className="pt-2">
+                             <button 
+                               onClick={(e) => { e.stopPropagation(); handleSyncSingle(r); }}
+                               className="w-full px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all flex items-center justify-center gap-2"
+                             >
+                                <Zap size={14} /> Sync to CoStudy
+                             </button>
+                             {r.last_sync_error && <p className="text-[10px] text-red-400 mt-2 italic">Error: {r.last_sync_error}</p>}
+                           </div>
+                         </div>
+                       </div>
+                       <div>
+                         <h5 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-3">Roster list</h5>
+                         <ul className="text-sm text-white/70 space-y-1 max-h-[150px] overflow-y-auto pr-2 custom-scrollbar">
+                           {roster[r.id]?.map((s, i) => (
+                             <li key={i} className="flex gap-2">
+                               <span className="text-white/30">{i+1}.</span> <span className="font-medium">{s.student_name}</span>
+                             </li>
+                           ))}
+                           {!roster[r.id]?.length && <li className="text-white/30 italic">No candidates found in roster.</li>}
+                         </ul>
+                       </div>
+                     </div>
+                  </div>
+                )}
              </div>
            );
          })}
@@ -432,12 +490,7 @@ function LeadsView() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (mounted) await fetchData();
-    };
-    load().catch(console.error);
-    return () => { mounted = false; };
+    fetchData().catch(console.error);
   }, [fetchData]);
 
   return (
@@ -478,7 +531,7 @@ function ResultsView() {
   }, []);
 
   useEffect(() => {
-    fetchExistingResults();
+    fetchExistingResults().catch(console.error);
   }, [fetchExistingResults]);
 
   const fetchFromCoStudy = async () => {

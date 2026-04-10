@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import {
   X, Copy, CheckCircle2, Loader2, ChevronDown, ChevronUp, ChevronRight,
@@ -60,7 +60,6 @@ function BulkBookingModal({ center, onClose, onSuccess }) {
   const [parsedStudents, setParsedStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const fetchData = () => {}; // defined but placeholder for file logic
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -76,7 +75,7 @@ function BulkBookingModal({ center, onClose, onSuccess }) {
         const rows = data.slice(1).filter(r => r[0]); // Skip header
         setParsedStudents(rows);
         if (rows.length === 0) setError('No student data found in file.');
-      } catch (err) { setError('Failed to parse Excel file.'); }
+      } catch { setError('Failed to parse Excel file.'); }
     };
     reader.readAsBinaryString(file);
   };
@@ -268,18 +267,16 @@ function EntryScreen({ onAccessSuccess, onRegister }) {
       <BgBlobs />
       
       <div className="absolute top-0 left-0 right-0 h-24 flex items-center justify-between px-8 md:px-12 z-20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/40">
-             <Building2 size={20} />
-          </div>
+        <div className="flex items-center gap-4">
+          <div className="h-8 w-1 bg-[#FFD000] rounded-full" />
           <div>
-            <h1 className="text-white font-black text-sm uppercase tracking-[0.3em]">Institute Portal</h1>
-            <p className="text-white/20 text-[9px] font-bold uppercase tracking-widest">Access & Registration</p>
+            <h1 className="text-white font-black text-lg uppercase tracking-[0.4em]">Institute Portal</h1>
+            <p className="text-white/20 text-[9px] font-black uppercase tracking-[0.2em] mt-0.5">Secure Administrative Access</p>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-8">
-          <button onClick={() => window.location.href = '/'} className="text-white/30 hover:text-white text-[10px] font-black uppercase tracking-widest transition-colors">Back to Website</button>
-        </div>
+        <button onClick={() => window.location.href = '/'} className="group flex items-center gap-2 text-white/30 hover:text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all">
+          <ChevronRight size={14} className="rotate-180 transition-transform group-hover:-translate-x-1" /> Back to Main
+        </button>
       </div>
 
       <div className="relative z-10 w-full max-w-5xl mt-12 animate-in fade-in zoom-in-95 duration-700">
@@ -440,14 +437,14 @@ function RegisterScreen({ onSuccess, onBack }) {
 
 // ─── Sub-Views ────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, icon: StatIcon, color, suffix }) {
+function StatCard({ label, value, icon: LucideIcon, color, suffix }) {
   return (
     <div className={`${GLASS} rounded-3xl p-6 relative overflow-hidden group`}>
        <div className={`absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-20 transition-all duration-700 group-hover:opacity-40`} style={{ background: color }} />
        <div className="relative z-10">
           <div className="flex items-center gap-3 mb-6">
              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: color + '15', color }}>
-                <StatIcon size={18} />
+                <LucideIcon size={18} />
              </div>
              <h4 className="text-white/30 text-[10px] font-black uppercase tracking-widest">{label}</h4>
           </div>
@@ -460,7 +457,7 @@ function StatCard({ label, value, icon: StatIcon, color, suffix }) {
   );
 }
 
-function OverviewView({ stats, bookings, results }) {
+function OverviewView({ stats, bookings }) {
   const recentBookings = bookings.slice(0, 3);
   return (
     <div className="space-y-8">
@@ -676,9 +673,12 @@ function DashboardScreen({ center, onSignOut }) {
     <div className="min-h-screen bg-[#07070f] flex flex-col md:flex-row relative">
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 ${GLASS} border-r border-white/5 transition-transform duration-300 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full bg-[#07070f]/80 p-8">
-           <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 rounded-xl bg-[#FFD000] flex items-center justify-center text-black shadow-[0_8px_20px_rgba(255,208,0,0.2)]"><Building2 size={20} /></div>
-              <div><h2 className="text-white font-black text-sm tracking-tight">INSTITUTE</h2><p className="text-[#FFD000] text-[9px] font-black uppercase tracking-[0.2em]">Platform</p></div>
+           <div className="flex items-center gap-4 mb-16">
+              <div className="w-1.5 h-10 bg-[#FFD000] rounded-full" />
+              <div>
+                <h2 className="text-white font-black text-[15px] tracking-[0.3em] leading-none mb-1">PORTAL</h2>
+                <p className="text-white/20 text-[9px] font-black uppercase tracking-widest">Administrative Hub</p>
+              </div>
            </div>
            <nav className="space-y-1">
               {menuItems.map(item => (
@@ -695,15 +695,21 @@ function DashboardScreen({ center, onSignOut }) {
       </aside>
 
       <main className="flex-1 md:ml-72 flex flex-col min-h-screen relative z-10 overflow-x-hidden">
-        <header className="sticky top-0 z-40 h-20 px-8 flex items-center justify-between backdrop-blur-2xl bg-black/40 border-b border-white/[0.05]">
+        <header className="sticky top-0 z-40 h-24 px-8 md:px-12 flex items-center justify-between backdrop-blur-3xl bg-black/40 border-b border-white/[0.05]">
            <div className="md:hidden"><button onClick={() => setSidebarOpen(true)} className="p-2 text-white/40"><Menu size={24} /></button></div>
            <div className="hidden md:block">
-              <h3 className="text-white font-black text-lg tracking-tight capitalize">{nav.replace('_', ' ')}</h3>
-              <p className="text-white/20 text-[9px] font-black uppercase tracking-widest">{center.city} Center Database</p>
+              <div className="flex items-center gap-3">
+                 <h3 className="text-2xl font-black text-white tracking-tight capitalize">{nav.replace('_', ' ')}</h3>
+                 <div className="h-4 w-[1px] bg-white/10 mx-2" />
+                 <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#FFD000]" />
+                    <p className="text-white/30 text-[10px] font-black uppercase tracking-widest">{center.name}</p>
+                 </div>
+              </div>
            </div>
-           <div className="flex items-center gap-4">
-              <button onClick={() => setShowBulkBooking(true)} className="h-12 px-6 rounded-xl bg-[#FFD000] text-black font-black text-[10px] uppercase tracking-widest shadow-[0_12px_24px_rgba(255,208,0,0.2)] hover:scale-105 active:scale-95 transition-all">New Booking</button>
-              <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl bg-white/5 flex items-center justify-center text-white/20 relative"><Bell size={18} /><span className="absolute top-0 right-0 w-2 h-2 bg-[#FFD000] rounded-full border-2 border-black" /></div>
+           <div className="flex items-center gap-6">
+              <button onClick={() => setShowBulkBooking(true)} className="h-14 px-8 rounded-2xl bg-[#FFD000] text-black font-black text-[10px] uppercase tracking-widest shadow-[0_15px_35px_rgba(255,208,0,0.15)] hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-3"><Plus size={16} /> Batch Booking</button>
+              <div className="h-12 w-12 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center text-white/20 relative cursor-pointer hover:bg-white/5 transition-colors group"><Bell size={18} className="group-hover:text-white transition-colors" /><span className="absolute top-2 right-2 w-2 h-2 bg-[#FFD000] rounded-full border-2 border-black" /></div>
            </div>
         </header>
 

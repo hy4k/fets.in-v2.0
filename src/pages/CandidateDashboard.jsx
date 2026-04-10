@@ -44,7 +44,7 @@ function BgBlobs() {
 
 // ── Sub-Views ────────────────────────────────────────────────────────────────
 
-function OverviewView({ stats, bookings, results, onOpenChat }) {
+function OverviewView({ stats, bookings, results, onOpenChat, onSwitchTab }) {
   const nextExam = bookings.find(b => b.status === 'confirmed' || b.status === 'pending');
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -56,9 +56,9 @@ function OverviewView({ stats, bookings, results, onOpenChat }) {
        </div>
 
        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col">
              {nextExam ? (
-                <div className={`${GLASS} rounded-[2rem] p-8 relative overflow-hidden group`}>
+                <div className={`${GLASS} rounded-[2rem] p-8 relative overflow-hidden group flex-1`}>
                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#FFD000]/10 blur-[60px]" />
                    <h3 className="text-white font-black text-xs uppercase tracking-[0.3em] mb-6">Upcoming Examination</h3>
                    <div className="flex items-center gap-6">
@@ -77,13 +77,13 @@ function OverviewView({ stats, bookings, results, onOpenChat }) {
                    </div>
                 </div>
              ) : (
-                <div className={`${GLASS} rounded-[2rem] p-10 text-center border-dashed border-white/10`}>
+                <div className={`${GLASS} rounded-[2rem] p-10 text-center border-dashed border-white/10 flex-1 flex flex-col justify-center`}>
                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6 text-white/20">
                       <Calendar size={24} />
                    </div>
                    <h3 className="text-white font-black text-lg mb-2">No active bookings</h3>
                    <p className="text-white/40 text-sm font-medium max-w-xs mx-auto mb-8 leading-relaxed">Schedule your next CMA Test Drive and track your progress here.</p>
-                   <button className="h-12 px-8 rounded-full bg-[#FFD000] text-black font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">Schedule Exam</button>
+                   <button onClick={() => onSwitchTab('bookings')} className="h-12 px-8 self-center rounded-full bg-[#FFD000] text-black font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">Schedule Exam Now</button>
                 </div>
              )}
 
@@ -106,21 +106,22 @@ function OverviewView({ stats, bookings, results, onOpenChat }) {
                       </div>
                    ))}
                    {results.length === 0 && <p className="text-white/20 text-xs font-black uppercase text-center py-8">No results available yet</p>}
+                   {results.length > 0 && <button onClick={() => onSwitchTab('results')} className="w-full text-center py-2 text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-[#FFD000] transition-colors">View All Results</button>}
                 </div>
              </div>
           </div>
 
           <div className="space-y-6">
-             <div className={`${GLASS} rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between h-full`}>
-                <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-blue-600/10 blur-[80px]" />
+             <div className={`${GLASS} rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between h-full group`}>
+                <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-blue-600/10 blur-[80px] group-hover:bg-blue-600/20 transition-all duration-1000" />
                 <div>
-                   <h3 className="text-white/30 font-black text-xs uppercase tracking-[0.3em] mb-6">Academic Pulse</h3>
+                   <h3 className="text-white/30 font-black text-xs uppercase tracking-[0.3em] mb-6">Study Hub</h3>
                    <h2 className="text-4xl font-black text-white mb-6 leading-[1.1] tracking-tighter">Your pathway to global certification starts here.</h2>
                    <p className="text-white/40 text-sm font-medium leading-relaxed mb-10">We've updated our resources section with the latest CMA Part 1 Mock materials. Check them out to stay ahead.</p>
                 </div>
                 <div className="flex flex-wrap gap-4 mt-auto">
-                   <button onClick={onOpenChat} className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all">Ask Exam AI <ArrowRight size={16} /></button>
-                   <button className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"><Settings size={20} /></button>
+                   <button onClick={onOpenChat} className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-[0_8px_32px_rgba(255,208,0,0.2)]">Ask Exam AI <ArrowRight size={16} /></button>
+                   <button onClick={() => onSwitchTab('resources')} className="h-14 px-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all">Explore Materials</button>
                 </div>
              </div>
           </div>
@@ -129,14 +130,14 @@ function OverviewView({ stats, bookings, results, onOpenChat }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, color, suffix }) {
+function StatCard({ label, value, icon: LucideIcon, color, suffix }) {
   return (
     <div className={`${GLASS} rounded-3xl p-6 relative overflow-hidden group`}>
        <div className={`absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-20 transition-all duration-700 group-hover:opacity-40`} style={{ background: color }} />
        <div className="relative z-10">
           <div className="flex items-center gap-3 mb-6">
              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: color + '15', color }}>
-                <Icon size={18} />
+                <LucideIcon size={18} />
              </div>
              <h4 className="text-white/30 text-[10px] font-black uppercase tracking-widest">{label}</h4>
           </div>
@@ -392,25 +393,33 @@ export default function CandidateDashboard({ user, onClose, onLogout, onOpenChat
          {/* Content View */}
          <div className="flex-1 p-6 md:p-12">
             <div className="max-w-7xl mx-auto h-full">
-               {activeTab === 'overview' && <OverviewView stats={stats} bookings={bookings} results={results} onOpenChat={onOpenChat} />}
+               {activeTab === 'overview' && <OverviewView stats={stats} bookings={bookings} results={results} onOpenChat={onOpenChat} onSwitchTab={setActiveTab} />}
                {activeTab === 'exams' && <ExamsView bookings={bookings} loading={loading} expandedBooking={expandedBooking} setExpandedBooking={setExpandedBooking} />}
                {activeTab === 'results' && <ResultsView results={results} loading={loading} />}
                
                {activeTab === 'bookings' && (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                     <h2 className="text-3xl font-black text-white tracking-tight mb-2">Plan Your Session</h2>
-                     <p className="text-white/40 text-sm font-medium mb-10">Select a center and view available slots for your next mock examination.</p>
-                     <div className={`${GLASS} rounded-[2.5rem] p-8 md:p-12 overflow-hidden`}>
-                        <CalendarSection />
+                     <div className="mb-10">
+                        <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Plan Your Session</h2>
+                        <p className="text-white/40 text-sm font-medium mt-1 uppercase tracking-widest">Select a center and view available slots for your next mock examination.</p>
+                     </div>
+                     <div className={`${GLASS} rounded-[2.5rem] overflow-hidden`}>
+                        <div className="p-8 md:p-12 bg-white/[0.01]">
+                           <CalendarSection />
+                        </div>
                      </div>
                   </div>
                )}
 
                {activeTab === 'resources' && (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full">
-                     <h2 className="text-3xl font-black text-white tracking-tight mb-2">Knowledge Base</h2>
-                     <p className="text-white/40 text-sm font-medium mb-10">Premium study materials and examination guidelines curated for your success.</p>
-                     <StudentResourcesSection />
+                     <div className="mb-10">
+                        <h2 className="text-3xl font-black text-white tracking-tight leading-tight">Knowledge Base</h2>
+                        <p className="text-white/40 text-sm font-medium mt-1 uppercase tracking-widest">Premium study materials and examination guidelines curated for your success.</p>
+                     </div>
+                     <div className={`${GLASS} rounded-[2.5rem] p-8 md:p-12 overflow-hidden bg-white/[0.01]`}>
+                        <StudentResourcesSection />
+                     </div>
                   </div>
                )}
             </div>
