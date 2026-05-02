@@ -30,3 +30,5 @@ config/
 .claude/
 .trae/
 server_log.txt
+
+supabase.exe
