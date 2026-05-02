@@ -5,6 +5,7 @@ import {
   User, Mail, Phone, Building2, Tag, CreditCard
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { initiatePayment, redirectToPayU } from '../lib/payment';
 
 const STEPS = ['Center', 'Date', 'Slot', 'Details', 'Payment'];
 const EXAM_PRICE = 2500;
@@ -177,7 +178,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
       }
 
       if (paymentMethod === 'online') {
-        initiateRazorpay(booking.id);
+        await initiatePayU(booking.id);
       } else {
         setBookingDone(true);
       }
@@ -189,33 +190,29 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
     }
   };
 
-  const initiateRazorpay = (bookingId) => {
-    if (!window.Razorpay) {
-      showToast('Payment gateway not loaded. Please try "Pay at Center".', 'error');
-      return;
+  const initiatePayU = async (bookingId) => {
+    try {
+      const result = await initiatePayment({
+        bookingId,
+        bookingTable: 'mock_exam_bookings',
+        amount: finalPrice,
+        customerName: form.name,
+        customerEmail: form.email,
+        customerPhone: form.mobile,
+        productInfo: `FETS CMA Mock Exam - ${selectedPart} | ${selectedCenter}`,
+      });
+
+      if (result.payu_url && result.payu_params) {
+        redirectToPayU(result.payu_url, result.payu_params);
+        // Page will navigate away — no further state updates needed
+      } else {
+        throw new Error(result.error || 'Payment initiation failed');
+      }
+    } catch (payErr) {
+      console.error('PayU error:', payErr);
+      showToast(`Payment failed: ${payErr.message}. Your booking is saved — pay at center.`, 'error');
+      setBookingDone(true); // Show confirmation even if payment fails
     }
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
-      amount: finalPrice * 100,
-      currency: 'INR',
-      name: 'FETS — CMA US Mock Exam',
-      description: `${selectedSlot.part} | ${selectedCenter} | ${formatDate(selectedDate)}`,
-      prefill: { name: form.name, email: form.email, contact: form.mobile },
-      theme: { color: '#FFC000' },
-      handler: async (response) => {
-        if (!supabase) return;
-        await supabase
-          .from('mock_exam_bookings')
-          .update({
-            payment_status: 'paid',
-            payment_reference: response.razorpay_payment_id,
-          })
-          .eq('id', bookingId);
-        setBookingDone(true);
-      },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
   };
 
   const resetForm = () => {
@@ -679,7 +676,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { id: 'online', label: 'Pay Online', desc: 'Razorpay — UPI, Card, Net Banking', icon: '💳' },
+                    { id: 'online', label: 'Pay Online', desc: 'PayU — UPI, Card, Net Banking', icon: '💳' },
                     { id: 'center', label: 'Pay at Center', desc: 'Pay cash / card on exam day', icon: '🏢' },
                   ].map(m => (
                     <button

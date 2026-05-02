@@ -90,8 +90,8 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
             productInfo: `FETS CMA Mock Exam - ${examPart}`,
           });
 
-          if (result.success && result.payu_url && result.payu_params) {
-            // Redirect to PayU payment page
+          if (result.payu_url && result.payu_params) {
+            // Redirect to PayU live payment page
             redirectToPayU(result.payu_url, result.payu_params);
             return; // Don't setLoading(false) — we're navigating away
           } else {
