@@ -702,7 +702,7 @@ export default function CMAMockBooking({ isOpen, onClose, showToast }) {
                 className="btn-primary w-full h-12 text-sm font-bold flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
               >
                 {submitting ? (
-                  <><Loader2 size={17} className="animate-spin" /> Processing...</>
+                  <><Loader2 size={17} className="animate-spin" /> {paymentMethod === 'online' ? 'Redirecting to PayU...' : 'Processing...'}</>
                 ) : paymentMethod === 'online' ? (
                   <><CreditCard size={17} /> Pay ₹{finalPrice.toLocaleString()}</>
                 ) : (

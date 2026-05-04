@@ -227,7 +227,9 @@ export default function CMAMockBookingModal({ isOpen, onClose, mockInfo }) {
           disabled={loading}
           className="w-full bg-[#FFD000] text-dark-950 rounded-xl py-4 mt-4 font-black hover:bg-[#ffe44d] transition-all flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(255,208,0,0.25)]"
         >
-          {loading ? <Loader2 size={18} className="animate-spin" /> : "Confirm Registration"}
+          {loading ? (
+            <><Loader2 size={18} className="animate-spin" /> {paymentMethod === 'online' ? 'Redirecting to PayU...' : 'Confirming...'}</>
+          ) : "Confirm Registration"}
         </button>
       </form>
     </div>
