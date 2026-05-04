@@ -96,8 +96,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Generate unique transaction ID
-    const txnid = `FETS_${booking_id}_${Date.now()}`;
+    // Generate unique transaction ID (PayU max length is 25 chars)
+    // Format: F + 13 char timestamp + up to 5 char random string = max 19 chars
+    const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const txnid = `F${Date.now()}${randomStr}`;
 
     // Format amount to 2 decimal places (PayU requirement)
     const amountStr = parseFloat(amount).toFixed(2);
